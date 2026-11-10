@@ -3,95 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soad Lkhiyata - 3D Clothing Studio</title>
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Soad Lkhiyata — Digital Atelier</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --ink: #20251f;
+      --muted: #777d73;
+      --line: #e7e6df;
+      --paper: #f5f4ef;
+      --panel: #fffefa;
+      --green: #244b3d;
+      --green-dark: #19392e;
+      --lime: #d6f078;
+      --shadow: 0 18px 50px rgba(34, 42, 34, .08);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { display: flex; height: 100vh; background: #090d16; color: #f1f5f9; overflow: hidden; }
-    .sidebar { width: 360px; min-width: 360px; background: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; gap: 14px; z-index: 20; overflow-y: auto; }
-    .header h1 { font-size: 1.25rem; font-weight: 700; color: #fff; }
-    .header p { font-size: 0.8rem; color: #94a3b8; }
-    .control-box { background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
-    .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; display: block; }
-    input[type="text"], input[type="file"] { width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; font-size: 0.85rem; outline: none; }
-    input[type="color"] { width: 100%; height: 36px; border-radius: 6px; border: none; background: none; cursor: pointer; }
-    input[type="range"] { accent-color: #6366f1; }
-    .btn { width: 100%; padding: 9px 12px; border-radius: 6px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-    .btn-primary { background: #4f46e5; color: white; }
-    .btn-primary:hover { background: #4338ca; }
-    .btn-secondary { background: #334155; color: #f8fafc; }
-    .btn-secondary:hover { background: #475569; }
-    .btn-export { background: #10b981; color: white; margin-top: auto; }
-    .btn-export:hover { background: #059669; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .chips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-    .chip { padding: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #cbd5e1; font-size: 0.7rem; cursor: pointer; text-align: center; }
-    .chip:hover { background: #4f46e5; color: white; border-color: #4f46e5; }
-    .preview-card { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 6px; background: #0f172a; border-radius: 6px; }
-    .preview-card img { width: 40px; height: 40px; border-radius: 4px; object-fit: contain; background: #1e293b; }
-    #viewport-container { flex: 1; min-width: 0; position: relative; cursor: grab; }
-    #viewport-container:active { cursor: grabbing; }
-    #viewport-container canvas { display: block; width: 100%; height: 100%; }
-    .banner { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; color: #cbd5e1; white-space: nowrap; }
-    .spinner { border: 2px solid #334155; border-top: 2px solid #38bdf8; border-radius: 50%; width: 12px; height: 12px; animation: spin 0.8s linear infinite; display: none; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @media (max-width: 700px) {
-      body { height: 100dvh; flex-direction: column; overflow: hidden; }
-      .sidebar { width: 100%; min-width: 0; max-height: 46dvh; border-right: 0; border-bottom: 1px solid #1f2937; padding: 12px; gap: 10px; }
-      .header h1 { font-size: 1.05rem; }
-      .control-box { padding: 10px; }
-      #viewport-container { flex: 1; min-height: 0; }
-      .banner { top: 8px; font-size: 0.65rem; padding: 5px 9px; }
-      .btn-export { margin-top: 0; }
+    body { height: 100vh; overflow: hidden; color: var(--ink); background: var(--paper); }
+    .topbar {
+      height: 76px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 34px; background: rgba(255,254,250,.94); border-bottom: 1px solid var(--line);
+      position: relative; z-index: 30;
+    }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .brand-mark {
+      width:40px; height:40px; border-radius:13px; display:grid; place-items:center;
+      color:var(--lime); background:var(--green); font-size:18px; font-weight:800; letter-spacing:-2px;
+    }
+    .brand-name { font-size:15px; font-weight:800; letter-spacing:-.5px; }
+    .brand-sub { margin-top:2px; color:var(--muted); font-size:10px; letter-spacing:1.7px; text-transform:uppercase; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .studio-status { display:flex; align-items:center; gap:8px; color:#647067; font-size:11px; font-weight:700; letter-spacing:.4px; }
+    .status-dot { width:7px; height:7px; border-radius:50%; background:#6eaa78; box-shadow:0 0 0 4px #e9f2e6; }
+    .top-pill { border:1px solid var(--line); border-radius:30px; padding:9px 14px; color:#566157; font-size:11px; font-weight:700; background:#fff; }
+    .app-shell { height:calc(100vh - 76px); display:grid; grid-template-columns:370px minmax(0,1fr); }
+    .sidebar {
+      width:auto; min-width:0; padding:25px 22px 22px; display:flex; flex-direction:column; gap:19px;
+      background:var(--panel); border-right:1px solid var(--line); overflow-y:auto; z-index:10;
+    }
+    .sidebar-intro { padding:0 3px 2px; }
+    .eyebrow { color:#8a907f; font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
+    .sidebar-intro h1 { margin-top:8px; font-size:22px; line-height:1.2; letter-spacing:-1px; font-weight:800; }
+    .sidebar-intro p { margin-top:7px; color:var(--muted); font-size:11px; line-height:1.6; }
+    .control-box {
+      padding:16px; border:1px solid var(--line); border-radius:15px; background:#fff;
+      box-shadow:0 4px 14px rgba(38,45,35,.025);
+    }
+    .section-heading { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
+    .step-number {
+      flex:0 0 25px; width:25px; height:25px; display:grid; place-items:center;
+      border-radius:8px; background:#edf1e8; color:var(--green); font-size:10px; font-weight:800;
+    }
+    .section-title { color:var(--ink); font-size:12px; font-weight:800; letter-spacing:-.2px; }
+    .section-hint { margin-left:auto; color:#9a9d93; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; }
+    .label { display:block; margin:11px 0 7px; color:#858b80; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:1.1px; }
+    input[type="text"], input[type="file"] {
+      width:100%; padding:11px 12px; background:#fafaf7; border:1px solid #e8e9e1; border-radius:9px;
+      color:var(--ink); font-size:11px; outline:none; transition:border .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus, input[type="file"]:focus { border-color:#8ba494; box-shadow:0 0 0 3px rgba(36,75,61,.08); }
+    input[type="text"]::placeholder { color:#a7aaa1; }
+    input[type="color"] { width:100%; height:39px; padding:4px; border:1px solid #e8e9e1; border-radius:9px; background:#fafaf7; cursor:pointer; }
+    input[type="range"] { width:100%; accent-color:var(--green); cursor:pointer; }
+    .color-row { display:grid; grid-template-columns:1fr 44px; gap:9px; align-items:center; }
+    .color-note { color:var(--muted); font-size:10px; }
+    .btn {
+      width:100%; min-height:39px; padding:10px 13px; border:0; border-radius:9px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:8px; font-size:10px; font-weight:800;
+      letter-spacing:.2px; transition:transform .18s, background .18s, box-shadow .18s;
+    }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { color:#fff; background:var(--green); box-shadow:0 5px 12px rgba(36,75,61,.13); }
+    .btn-primary:hover { background:var(--green-dark); }
+    .btn-secondary { color:var(--green); background:#edf1e8; }
+    .btn-secondary:hover { background:#e3eadc; }
+    .btn-export { min-height:47px; color:#1e3025; background:var(--lime); box-shadow:0 7px 16px rgba(146,173,69,.17); }
+    .btn-export:hover { background:#c9e765; }
+    .btn:disabled { opacity:.55; cursor:wait; transform:none; }
+    .chips-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:7px; }
+    .chip {
+      padding:9px 5px; border:1px solid #e8e9e1; border-radius:8px; background:#fafaf7; color:#62695f;
+      font-size:9px; font-weight:700; cursor:pointer; text-align:center; transition:.18s;
+    }
+    .chip:hover { border-color:#a5b9a9; background:#edf2e9; color:var(--green); }
+    .preview-card {
+      display:flex; align-items:center; gap:10px; margin-top:12px; padding:9px;
+      border:1px dashed #dfe3d8; border-radius:10px; background:#fbfcf8;
+    }
+    .preview-card img { width:42px; height:42px; border-radius:7px; object-fit:contain; background:#eef0e9; }
+    .preview-copy { min-width:0; }
+    .preview-title { color:var(--ink); font-size:10px; font-weight:800; }
+    .preview-sub { margin-top:4px; color:var(--muted); font-size:9px; line-height:1.4; }
+    .range-caption { display:flex; justify-content:space-between; color:#92978d; font-size:9px; margin-top:3px; }
+    .upload-wrap { padding:11px; border:1px dashed #d9ded4; border-radius:10px; background:#fafbf8; }
+    .sidebar-actions { margin-top:auto; display:grid; gap:9px; padding-top:2px; }
+    #viewport-container {
+      min-width:0; min-height:0; position:relative; overflow:hidden; cursor:grab;
+      background:radial-gradient(ellipse at 52% 43%, #ffffff 0%, #f0f0e9 48%, #e5e7dd 100%);
+    }
+    #viewport-container:active { cursor:grabbing; }
+    #viewport-container canvas { display:block; width:100%; height:100%; }
+    .workspace-top {
+      position:absolute; top:24px; left:28px; right:28px; z-index:3;
+      display:flex; align-items:flex-start; justify-content:space-between; pointer-events:none;
+    }
+    .workspace-heading { pointer-events:auto; }
+    .workspace-heading .eyebrow { color:#7d887a; }
+    .workspace-heading h2 { margin-top:6px; color:#27332a; font-size:19px; font-weight:800; letter-spacing:-.8px; }
+    .workspace-heading p { margin-top:4px; color:#7c8479; font-size:10px; }
+    .view-chip { padding:9px 13px; border:1px solid rgba(255,255,255,.85); border-radius:30px; background:rgba(255,255,255,.72); color:#566256; font-size:9px; font-weight:800; letter-spacing:.5px; backdrop-filter:blur(12px); }
+    .banner {
+      position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:3;
+      padding:10px 16px; border:1px solid rgba(255,255,255,.85); border-radius:30px;
+      background:rgba(255,255,255,.78); color:#657064; font-size:9px; font-weight:700;
+      white-space:nowrap; pointer-events:none; box-shadow:0 8px 25px rgba(30,40,30,.06); backdrop-filter:blur(12px);
+    }
+    .spinner { width:12px; height:12px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; display:none; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (max-width:900px) {
+      .app-shell { grid-template-columns:330px minmax(0,1fr); }
+      .sidebar { padding:20px 16px; }
+      .topbar { padding:0 20px; }
+    }
+    @media (max-width:700px) {
+      body { height:100dvh; overflow:hidden; }
+      .topbar { height:62px; padding:0 14px; }
+      .brand-mark { width:34px; height:34px; border-radius:11px; }
+      .brand-name { font-size:13px; }
+      .brand-sub { font-size:8px; }
+      .studio-status { display:none; }
+      .top-pill { padding:8px 10px; font-size:9px; }
+      .app-shell { height:calc(100dvh - 62px); display:flex; flex-direction:column-reverse; }
+      #viewport-container { flex:1 1 auto; min-height:230px; }
+      .sidebar { width:100%; max-height:48%; min-height:0; padding:13px 12px 15px; gap:10px; border-right:0; border-top:1px solid var(--line); }
+      .sidebar-intro { display:none; }
+      .control-box { padding:12px; border-radius:12px; }
+      .workspace-top { top:13px; left:14px; right:14px; }
+      .workspace-heading h2 { font-size:15px; }
+      .workspace-heading p { font-size:9px; }
+      .view-chip { padding:7px 10px; font-size:8px; }
+      .banner { bottom:12px; max-width:calc(100% - 22px); padding:8px 11px; font-size:8px; }
+      .sidebar-actions { margin-top:0; grid-template-columns:1fr 1.4fr; }
+      .btn-export { min-height:42px; }
     }
   </style>
 </head>
+
 <body>
-  <div class="sidebar">
-    <div class="header">
-      <h1>Soad Lkhiyata</h1>
-      <p>3D Apparel & AI Design Studio</p>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">SL.</div>
+      <div><div class="brand-name">SOAD LKHiyata</div><div class="brand-sub">Digital atelier · Casablanca</div></div>
     </div>
-    <div class="control-box">
-      <span class="label">1. Fabric Color</span>
-      <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)">
+    <div class="topbar-right">
+      <div class="studio-status"><span class="status-dot"></span> STUDIO READY</div>
+      <div class="top-pill">3D DESIGN WORKSPACE</div>
     </div>
-    <div class="control-box">
-      <span class="label">2. Optional Logo / Decal</span>
-      <input type="text" id="aiDecalPrompt" placeholder="Describe a decal (optional)">
-      <button class="btn btn-primary" id="btnGenDecal" style="margin-top: 6px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate Decal (AI)</button>
-      <span class="label" style="font-size: 0.65rem; margin-top: 8px;">Instant Presets:</span>
-      <div class="chips-grid">
-        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200')">Neon Wave</div>
-        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=200')">Vintage Art</div>
-        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=200')">Skull Oil</div>
+  </header>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-intro">
+        <div class="eyebrow">Your creative workspace</div>
+        <h1>Make it yours.</h1>
+        <p>Build a look, explore fabrics and bring your clothing ideas to life.</p>
       </div>
-      <div class="preview-card">
-        <img id="currentDecalImg" alt="Selected decal" style="display:none;">
-        <div><div id="decalPreviewTitle" style="font-size: 0.75rem; font-weight: 600;">No decal selected</div><div style="font-size: 0.65rem; color: #94a3b8;">Optional — choose or generate one, then click the shirt</div></div>
+
+      <section class="control-box">
+        <div class="section-heading"><span class="step-number">01</span><span class="section-title">Garment colour</span><span class="section-hint">Base</span></div>
+        <div class="color-row">
+          <div class="color-note">Choose your starting colour</div>
+          <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)" aria-label="Garment colour">
+        </div>
+      </section>
+
+      <section class="control-box">
+        <div class="section-heading"><span class="step-number">02</span><span class="section-title">Logo & artwork</span><span class="section-hint">Optional</span></div>
+        <input type="text" id="aiDecalPrompt" placeholder="Describe your artwork idea…" aria-label="Artwork description">
+        <button class="btn btn-primary" id="btnGenDecal" style="margin-top:9px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate artwork with AI</button>
+        <span class="label">Explore ready-made artwork</span>
+        <div class="chips-grid">
+          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200')">Abstract</div>
+          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=200')">Vintage</div>
+          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=200')">Art print</div>
+        </div>
+        <div class="preview-card">
+          <img id="currentDecalImg" alt="Selected artwork" style="display:none;">
+          <div class="preview-copy"><div class="preview-title" id="decalPreviewTitle">No artwork selected</div><div class="preview-sub">You can design without adding a logo</div></div>
+        </div>
+        <span class="label">Artwork size</span>
+        <input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6">
+        <div class="range-caption"><span>Small</span><span>Large</span></div>
+      </section>
+
+      <section class="control-box">
+        <div class="section-heading"><span class="step-number">03</span><span class="section-title">Fabric pattern</span><span class="section-hint">Optional</span></div>
+        <input type="text" id="aiPatternPrompt" placeholder="e.g. subtle Moroccan geometry…" aria-label="Fabric pattern description">
+        <button class="btn btn-secondary" id="btnGenPattern" style="margin-top:9px;" onclick="generateAIPattern()"><span class="spinner" id="patternSpinner"></span> Generate fabric pattern</button>
+        <span class="label">Quick fabric styles</span>
+        <div class="chips-grid">
+          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500')">Gradient</div>
+          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500')">Abstract</div>
+          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500')">Camo</div>
+        </div>
+      </section>
+
+      <section class="control-box">
+        <div class="section-heading"><span class="step-number">04</span><span class="section-title">Your own artwork</span><span class="section-hint">Upload</span></div>
+        <div class="upload-wrap"><input type="file" accept="image/*" onchange="uploadCustomDecal(event)" aria-label="Upload artwork"></div>
+      </section>
+
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary" onclick="clearDecals()">↺ Reset design</button>
+        <button class="btn btn-export" onclick="exportHQRender()">↓ &nbsp; Export 2K image</button>
       </div>
-      <div style="margin-top: 6px;"><span class="label" style="font-size: 0.65rem;">Scale</span><input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6" style="width: 100%;"></div>
-    </div>
-    <div class="control-box">
-      <span class="label">3. All-Over Fabric Pattern</span>
-      <input type="text" id="aiPatternPrompt" placeholder="e.g. moroccan tile pattern">
-      <button class="btn btn-secondary" id="btnGenPattern" style="margin-top: 6px;" onclick="generateAIPattern()"><span class="spinner" id="patternSpinner"></span> Wrap All-Over (AI)</button>
-      <span class="label" style="font-size: 0.65rem; margin-top: 8px;">Instant Fabrics:</span>
-      <div class="chips-grid">
-        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500')">Gradient</div>
-        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500')">Abstract</div>
-        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500')">Camo</div>
+    </aside>
+    <main id="viewport-container">
+      <div class="workspace-top">
+        <div class="workspace-heading"><div class="eyebrow">Live product preview</div><h2>Your design, in 3D.</h2><p>Rotate, zoom and preview your creation</p></div>
+        <div class="view-chip">● &nbsp; LIVE PREVIEW</div>
       </div>
-    </div>
-    <div class="control-box"><span class="label">4. Upload Custom PNG</span><input type="file" accept="image/*" onchange="uploadCustomDecal(event)"></div>
-    <button class="btn btn-secondary" onclick="clearDecals()">Reset / Clear</button>
-    <button class="btn btn-export" onclick="exportHQRender()">Download 2K Image</button>
+      <div class="banner">Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click garment to place artwork</div>
+    </main>
   </div>
-  <div id="viewport-container"><div class="banner">Click garment to stamp decal | Drag to rotate | Scroll to zoom</div></div>
-  <script>
+    <script>
     const container = document.getElementById('viewport-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#090d16');
@@ -149,9 +287,7 @@
         currentDecalTexture = texture;
         document.getElementById('currentDecalImg').src = url;
         document.getElementById('currentDecalImg').style.display = 'block';
-        document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
-        document.getElementById('currentDecalImg').style.display = 'block';
-        document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
+        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
       }, undefined, () => alert('Could not load this image. Try another preset or upload a file.'));
     }
 
@@ -222,6 +358,8 @@
         if (currentDecalTexture) currentDecalTexture.dispose();
         currentDecalTexture = texture;
         document.getElementById('currentDecalImg').src = url;
+        document.getElementById('currentDecalImg').style.display = 'block';
+        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
         setLoading('decal', false);
       }, () => {
         setLoading('decal', false);
@@ -265,6 +403,8 @@
           if (currentDecalTexture) currentDecalTexture.dispose();
           currentDecalTexture = texture;
           document.getElementById('currentDecalImg').src = loadEvent.target.result;
+        document.getElementById('currentDecalImg').style.display = 'block';
+        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
           document.getElementById('currentDecalImg').style.display = 'block';
           document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
         };
@@ -333,4 +473,3 @@
     animate();
   </script>
 </body>
-</html>
