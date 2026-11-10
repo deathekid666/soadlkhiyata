@@ -60,9 +60,9 @@
       <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)">
     </div>
     <div class="control-box">
-      <span class="label">2. Stamp Logo / Decal</span>
-      <input type="text" id="aiDecalPrompt" placeholder="e.g. golden dragon logo">
-      <button class="btn btn-primary" id="btnGenDecal" style="margin-top: 6px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate Logo (AI)</button>
+      <span class="label">2. Optional Logo / Decal</span>
+      <input type="text" id="aiDecalPrompt" placeholder="Describe a decal (optional)">
+      <button class="btn btn-primary" id="btnGenDecal" style="margin-top: 6px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate Decal (AI)</button>
       <span class="label" style="font-size: 0.65rem; margin-top: 8px;">Instant Presets:</span>
       <div class="chips-grid">
         <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200')">Neon Wave</div>
@@ -70,8 +70,8 @@
         <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=200')">Skull Oil</div>
       </div>
       <div class="preview-card">
-        <img id="currentDecalImg" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200" alt="Decal">
-        <div><div style="font-size: 0.75rem; font-weight: 600;">Active Decal</div><div style="font-size: 0.65rem; color: #94a3b8;">Click shirt to apply</div></div>
+        <img id="currentDecalImg" alt="Selected decal" style="display:none;">
+        <div><div id="decalPreviewTitle" style="font-size: 0.75rem; font-weight: 600;">No decal selected</div><div style="font-size: 0.65rem; color: #94a3b8;">Optional — choose or generate one, then click the shirt</div></div>
       </div>
       <div style="margin-top: 6px;"><span class="label" style="font-size: 0.65rem;">Scale</span><input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6" style="width: 100%;"></div>
     </div>
@@ -148,9 +148,13 @@
         if (currentDecalTexture && currentDecalTexture !== texture) currentDecalTexture.dispose();
         currentDecalTexture = texture;
         document.getElementById('currentDecalImg').src = url;
+        document.getElementById('currentDecalImg').style.display = 'block';
+        document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
+        document.getElementById('currentDecalImg').style.display = 'block';
+        document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
       }, undefined, () => alert('Could not load this image. Try another preset or upload a file.'));
     }
-    setTextureFromUrl(document.getElementById('currentDecalImg').src);
+
     function setPresetDecal(url) { setTextureFromUrl(url); }
     function setPresetPattern(url) {
       textureLoader.load(url, (texture) => {
@@ -261,6 +265,8 @@
           if (currentDecalTexture) currentDecalTexture.dispose();
           currentDecalTexture = texture;
           document.getElementById('currentDecalImg').src = loadEvent.target.result;
+          document.getElementById('currentDecalImg').style.display = 'block';
+          document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
         };
         image.onerror = () => alert('Could not read this image.');
         image.src = loadEvent.target.result;
