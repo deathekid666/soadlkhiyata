@@ -89,9 +89,9 @@ scene.add(new THREE.HemisphereLight(0xffffff,0xc5c7bd,2.0));
 const key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(3,5,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
 const fill=new THREE.DirectionalLight(0xe5eadf,1.15);fill.position.set(-4,2,2);scene.add(fill);
 const rim=new THREE.DirectionalLight(0xffffff,1.8);rim.position.set(0,3,-4);scene.add(rim);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(5,80),new THREE.MeshStandardMaterial({color:'#e9e9e1',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.95;floor.receiveShadow=true;scene.add(floor);
-const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.35,64),new THREE.MeshBasicMaterial({color:'#77786f',transparent:true,opacity:.12,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.scale.set(1.35,.7,1);shadow.position.y=-1.94;scene.add(shadow);
-let garmentRoot=new THREE.Group(),garmentMeshes=[],detailMeshes=[],decals=[],selected='hoodie',baseColor='#d9d6cf',fabric='cotton',pattern='plain',artTexture=null;
+const floor=new THREE.Mesh(new THREE.CircleGeometry(5,80),new THREE.MeshStandardMaterial({color:'#e9e9e1',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.22;floor.receiveShadow=true;scene.add(floor);
+const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.35,64),new THREE.MeshBasicMaterial({color:'#77786f',transparent:true,opacity:.12,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.scale.set(1.35,.7,1);shadow.position.y=-1.21;scene.add(shadow);
+let garmentRoot=new THREE.Group(),garmentMeshes=[],detailMeshes=[],decals=[],artTextures=[],selected='hoodie',baseColor='#d9d6cf',fabric='cotton',pattern='plain',artTexture=null;
 const material=new THREE.MeshStandardMaterial({color:baseColor,roughness:.91,metalness:0,side:THREE.DoubleSide});
 const seamMat=new THREE.MeshStandardMaterial({color:'#77766f',roughness:1});
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2100)}
@@ -130,7 +130,7 @@ function makeTorso(kind){
   seam([[-.31,1.04,.15],[-.24,1.25,.12],[0,1.31,.1],[.24,1.25,.12],[.31,1.04,.15]],.014);
   // Kangaroo pocket: softly rounded patch plus stitch outline
   const shape=new THREE.Shape();shape.moveTo(-.39,-.05);shape.quadraticCurveTo(-.39,-.17,-.27,-.18);shape.lineTo(.27,-.18);shape.quadraticCurveTo(.39,-.17,.39,-.05);shape.lineTo(.31,.17);shape.lineTo(-.31,.17);shape.closePath();
-  const pocket=addMesh(new THREE.ShapeGeometry(shape,20));pocket.position.set(0,-.35,.405);pocket.material=material;
+  const pocket=addMesh(new THREE.ShapeGeometry(shape,20));pocket.position.set(0,-.35,.47);pocket.material=material;
   seam([[-.39,-.4,.414],[-.34,-.52,.414],[0,-.54,.414],[.34,-.52,.414],[.39,-.4,.414]],.009);
   // Drawstrings
   [-.1,.1].forEach(x=>{seam([[x,.83,.31],[x,.59,.37],[x+(x<0?-.025:.025),.48,.38]],.012)});
@@ -141,8 +141,8 @@ function makeTorso(kind){
  if(!tee){cuff(0,-.91,0,.69,.4,.07);}
 }
 function makePants(shorts=false){
- const top=addMesh(ringSurface([[.78,.68,.34],[.9,.72,.36],[.94,.67,.34]],64,.002));top.position.y=0;
- const len=shorts?1.02:1.76, y0=.64, y1=y0-len;
+ const top=addMesh(ringSurface([[.62,.68,.34],[.76,.72,.36],[.9,.67,.34]],64,.002));top.position.y=0;
+ const len=shorts?1.02:1.76, y0=.74, y1=y0-len;
  [-.39,.39].forEach((x,idx)=>{
   const outward=idx===0?-.035:.035;
   const geo=taperedTube([[x*.85,y0,0],[x+outward,.15,0],[x+outward*.8,y1+.12,0]],[.37,.39,.32,.30],52,32);
@@ -185,14 +185,14 @@ function artworkCanvas(description){
  x.font='700 15px sans-serif';x.letterSpacing='5px';x.fillText('SOAD LKHiyata',256,318);
  const tex=new THREE.CanvasTexture(c);tex.encoding=THREE.sRGBEncoding;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;
 }
-function applyArtwork(desc){if(artTexture)artTexture.dispose();artTexture=artworkCanvas(desc);const c=document.createElement('canvas');c.width=128;c.height=128;c.getContext('2d').drawImage(artTexture.image,0,0,128,128);document.getElementById('artPreview').src=c.toDataURL();document.getElementById('artPreview').style.display='block';document.getElementById('artName').textContent=desc||'Custom artwork';toast('Artwork ready · click the garment to place it');}
+function applyArtwork(desc){artTexture=artworkCanvas(desc);artTextures.push(artTexture);const c=document.createElement('canvas');c.width=128;c.height=128;c.getContext('2d').drawImage(artTexture.image,0,0,128,128);document.getElementById('artPreview').src=c.toDataURL();document.getElementById('artPreview').style.display='block';document.getElementById('artName').textContent=desc||'Custom artwork';toast('Artwork ready · click the garment to place it');}
 function generateArtwork(){const p=document.getElementById('artPrompt').value.trim();if(!p){toast('Describe your artwork first');document.getElementById('artPrompt').focus();return;}applyArtwork(p);}
 function presetArtwork(p){document.getElementById('artPrompt').value=p==='monogram'?'SL monogram':p==='sun'?'Vintage sun emblem':'Heritage club crest';applyArtwork(document.getElementById('artPrompt').value);}
-function uploadArtwork(e){const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>8*1024*1024){toast('Please use an image smaller than 8 MB');e.target.value='';return;}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{if(artTexture)artTexture.dispose();artTexture=t;t.encoding=THREE.sRGBEncoding;const img=document.getElementById('artPreview');img.src=url;img.style.display='block';document.getElementById('artName').textContent=f.name;toast('Artwork uploaded · click the garment to place it');},undefined,()=>toast('Could not load that image'));e.target.value='';}
+function uploadArtwork(e){const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>8*1024*1024){toast('Please use an image smaller than 8 MB');e.target.value='';return;}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{artTexture=t;artTextures.push(t);t.encoding=THREE.sRGBEncoding;const img=document.getElementById('artPreview');img.src=url;img.style.display='block';document.getElementById('artName').textContent=f.name;toast('Artwork uploaded · click the garment to place it');},undefined,()=>toast('Could not load that image'));e.target.value='';}
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 renderer.domElement.addEventListener('click',e=>{if(!artTexture)return;const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-(e.clientY-rect.top)/rect.height*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(garmentMeshes,false);if(!hits.length)return;const hit=hits[0],normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld),orientation=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal));const size=Number(document.getElementById('artSize').value);try{const geometry=new THREE.DecalGeometry(hit.object,hit.point,orientation,new THREE.Vector3(size,size,.035));const decalMat=new THREE.MeshStandardMaterial({map:artTexture,transparent:true,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,roughness:.9});const decal=new THREE.Mesh(geometry,decalMat);decal.renderOrder=5;scene.add(decal);decals.push(decal);toast('Artwork placed');}catch(err){toast('Could not place artwork on this area');}});
 function setView(view,btn){document.querySelectorAll('.viewbtn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');const target=view==='back'?new THREE.Vector3(0,.12,-6.1):view==='side'?new THREE.Vector3(6.1,.12,0):new THREE.Vector3(0,.12,6.1);camera.position.copy(target);controls.target.set(0,.05,0);controls.update();}
-function resetDesign(){baseColor='#d9d6cf';document.getElementById('garmentColor').value=baseColor;material.color.set(baseColor);material.map=makeFabricMap('cotton','plain');material.roughness=.91;material.needsUpdate=true;decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.dispose()});decals=[];if(artTexture){artTexture.dispose();artTexture=null;}document.getElementById('artPreview').style.display='none';document.getElementById('artName').textContent='No artwork selected';document.getElementById('artPrompt').value='';toast('Design reset');}
+function resetDesign(){baseColor='#d9d6cf';document.getElementById('garmentColor').value=baseColor;material.color.set(baseColor);material.map=makeFabricMap('cotton','plain');material.roughness=.91;fabric='cotton';pattern='plain';document.querySelectorAll('.section:nth-of-type(2) .chip').forEach((b,i)=>b.classList.toggle('active',i===0||i===4));material.needsUpdate=true;decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.dispose()});decals=[];artTextures.forEach(t=>t.dispose());artTextures=[];artTexture=null;document.getElementById('artPreview').style.display='none';document.getElementById('artName').textContent='No artwork selected';document.getElementById('artPrompt').value='';toast('Design reset');}
 function exportRender(){const oldW=renderer.domElement.width,oldH=renderer.domElement.height,oldRatio=renderer.getPixelRatio(),oldAspect=camera.aspect;try{renderer.setPixelRatio(1);renderer.setSize(2048,2048,false);camera.aspect=1;camera.updateProjectionMatrix();renderer.render(scene,camera);const a=document.createElement('a');a.download='soad-lkhiyata-'+selected+'-design-2k.png';a.href=renderer.domElement.toDataURL('image/png');a.click();toast('2K design exported');}catch(e){toast('Export failed · try a smaller browser window');}finally{camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.setPixelRatio(oldRatio);renderer.setSize(host.clientWidth,host.clientHeight,false);}}
 function resize(){const w=Math.max(host.clientWidth,1),h=Math.max(host.clientHeight,1);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
 window.addEventListener('resize',resize);if('ResizeObserver'in window)new ResizeObserver(resize).observe(host);
