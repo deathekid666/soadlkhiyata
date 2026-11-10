@@ -49,6 +49,14 @@
     .eyebrow { color:#8a907f; font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
     .sidebar-intro h1 { margin-top:8px; font-size:22px; line-height:1.2; letter-spacing:-1px; font-weight:800; }
     .sidebar-intro p { margin-top:7px; color:var(--muted); font-size:11px; line-height:1.6; }
+    .garment-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .garment-option { min-height:72px; padding:10px 8px; border:1px solid #e8e9e1; border-radius:10px; background:#fafaf7; color:#596257; cursor:pointer; text-align:left; transition:.18s; }
+    .garment-option:hover { border-color:#9eb3a2; background:#f1f5ed; }
+    .garment-option.active { border:1.5px solid var(--green); background:#edf2e9; color:var(--green); box-shadow:inset 0 0 0 1px rgba(36,75,61,.05); }
+    .garment-icon { display:block; font-size:22px; line-height:1; margin-bottom:7px; }
+    .garment-option strong { display:block; font-size:10px; }
+    .garment-option small { display:block; margin-top:3px; color:#92988e; font-size:8px; }
+    .generate-garment { min-height:46px; margin-top:11px; font-size:11px; }
     .control-box {
       padding:16px; border:1px solid var(--line); border-radius:15px; background:#fff;
       box-shadow:0 4px 14px rgba(38,45,35,.025);
@@ -173,7 +181,19 @@
       </div>
 
       <section class="control-box">
-        <div class="section-heading"><span class="step-number">01</span><span class="section-title">Garment colour</span><span class="section-hint">Base</span></div>
+        <div class="section-heading"><span class="step-number">01</span><span class="section-title">Choose your garment</span><span class="section-hint">Start here</span></div>
+        <div class="garment-options" role="group" aria-label="Choose garment type">
+          <button type="button" class="garment-option active" data-garment="hoodie" onclick="selectGarment('hoodie',this)"><span class="garment-icon">🧥</span><strong>Hoodie</strong><small>Relaxed fit</small></button>
+          <button type="button" class="garment-option" data-garment="tshirt" onclick="selectGarment('tshirt',this)"><span class="garment-icon">👕</span><strong>T-shirt</strong><small>Classic fit</small></button>
+          <button type="button" class="garment-option" data-garment="pants" onclick="selectGarment('pants',this)"><span class="garment-icon">👖</span><strong>Baggy pants</strong><small>Loose fit</small></button>
+          <button type="button" class="garment-option" data-garment="sweatshirt" onclick="selectGarment('sweatshirt',this)"><span class="garment-icon">🧶</span><strong>Sweatshirt</strong><small>Without hood</small></button>
+          <button type="button" class="garment-option" data-garment="shorts" onclick="selectGarment('shorts',this)"><span class="garment-icon">🩳</span><strong>Shorts</strong><small>Relaxed fit</small></button>
+        </div>
+        <button class="btn btn-primary generate-garment" id="generateGarmentBtn" onclick="generateGarment()">✦ &nbsp; Generate garment</button>
+      </section>
+
+      <section class="control-box">
+        <div class="section-heading"><span class="step-number">02</span><span class="section-title">Garment colour</span><span class="section-hint">Base</span></div>
         <div class="color-row">
           <div class="color-note">Choose your starting colour</div>
           <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)" aria-label="Garment colour">
@@ -181,7 +201,7 @@
       </section>
 
       <section class="control-box">
-        <div class="section-heading"><span class="step-number">02</span><span class="section-title">Logo & artwork</span><span class="section-hint">Optional</span></div>
+        <div class="section-heading"><span class="step-number">03</span><span class="section-title">Logo & artwork</span><span class="section-hint">Optional</span></div>
         <input type="text" id="aiDecalPrompt" placeholder="Describe your artwork idea…" aria-label="Artwork description">
         <button class="btn btn-primary" id="btnGenDecal" style="margin-top:9px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate artwork with AI</button>
         <span class="label">Explore ready-made artwork</span>
@@ -200,7 +220,7 @@
       </section>
 
       <section class="control-box">
-        <div class="section-heading"><span class="step-number">03</span><span class="section-title">Fabric pattern</span><span class="section-hint">Optional</span></div>
+        <div class="section-heading"><span class="step-number">04</span><span class="section-title">Fabric pattern</span><span class="section-hint">Optional</span></div>
         <input type="text" id="aiPatternPrompt" placeholder="e.g. subtle Moroccan geometry…" aria-label="Fabric pattern description">
         <button class="btn btn-secondary" id="btnGenPattern" style="margin-top:9px;" onclick="generateAIPattern()"><span class="spinner" id="patternSpinner"></span> Generate fabric pattern</button>
         <span class="label">Quick fabric styles</span>
@@ -212,7 +232,7 @@
       </section>
 
       <section class="control-box">
-        <div class="section-heading"><span class="step-number">04</span><span class="section-title">Your own artwork</span><span class="section-hint">Upload</span></div>
+        <div class="section-heading"><span class="step-number">05</span><span class="section-title">Your own artwork</span><span class="section-hint">Upload</span></div>
         <div class="upload-wrap"><input type="file" accept="image/*" onchange="uploadCustomDecal(event)" aria-label="Upload artwork"></div>
       </section>
 
@@ -251,30 +271,81 @@
     const fillLight = new THREE.DirectionalLight(0x818cf8, 0.6);
     fillLight.position.set(-4, 2, -2);
     scene.add(fillLight);
-    const garmentGroup = new THREE.Group();
-    const garmentMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0.05 });
-    const torsoGeo = new THREE.CylinderGeometry(0.72, 0.82, 1.9, 64, 32);
-    torsoGeo.scale(1.15, 1, 0.65);
-    const mainGarmentMesh = new THREE.Mesh(torsoGeo, garmentMaterial);
-    garmentGroup.add(mainGarmentMesh);
-    const collarGeo = new THREE.TorusGeometry(0.35, 0.06, 16, 64);
-    collarGeo.rotation.x = Math.PI / 2;
-    collarGeo.scale(1.1, 1, 0.7);
-    const collar = new THREE.Mesh(collarGeo, garmentMaterial);
-    collar.position.set(0, 0.95, 0);
-    garmentGroup.add(collar);
-    const sleeveGeo = new THREE.CylinderGeometry(0.28, 0.35, 0.8, 32);
-    const leftSleeve = new THREE.Mesh(sleeveGeo, garmentMaterial);
-    leftSleeve.position.set(-0.95, 0.55, 0);
-    leftSleeve.rotation.z = Math.PI / 3.4;
-    leftSleeve.scale.set(1, 1, 0.75);
-    garmentGroup.add(leftSleeve);
-    const rightSleeve = leftSleeve.clone();
-    rightSleeve.position.set(0.95, 0.55, 0);
-    rightSleeve.rotation.z = -Math.PI / 3.4;
-    garmentGroup.add(rightSleeve);
-    scene.add(garmentGroup);
+    let garmentGroup = new THREE.Group();
+    const garmentMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.82, metalness: 0 });
+    let mainGarmentMesh = null;
+    let selectedGarment = 'hoodie';
+    const garmentMeshes = [];
     const decals = [];
+    function addGarmentMesh(geometry, position, scale, rotationZ) {
+      const mesh = new THREE.Mesh(geometry, garmentMaterial);
+      if (position) mesh.position.set(position[0], position[1], position[2]);
+      if (scale) mesh.scale.set(scale[0], scale[1], scale[2]);
+      if (rotationZ) mesh.rotation.z = rotationZ;
+      garmentGroup.add(mesh);
+      garmentMeshes.push(mesh);
+      return mesh;
+    }
+    function clearGarment() {
+      decals.forEach((decal) => { scene.remove(decal); decal.geometry.dispose(); if (decal.material) decal.material.dispose(); });
+      decals.length = 0;
+      scene.remove(garmentGroup);
+      garmentGroup.traverse((obj) => { if (obj.geometry) obj.geometry.dispose(); });
+      garmentGroup = new THREE.Group();
+      garmentMeshes.length = 0;
+    }
+    function selectGarment(type, button) {
+      selectedGarment = type;
+      document.querySelectorAll('.garment-option').forEach((item) => item.classList.toggle('active', item.dataset.garment === type));
+      const names = { hoodie:'Hoodie', tshirt:'T-shirt', pants:'Baggy pants', sweatshirt:'Sweatshirt', shorts:'Shorts' };
+      document.querySelector('.workspace-heading h2').textContent = names[type] + ' design preview';
+    }
+    function generateGarment() {
+      clearGarment();
+      const cyl = (top, bottom, height, radial, x, y, z, sx, sy, sz, rz) => addGarmentMesh(new THREE.CylinderGeometry(top,bottom,height,radial,24),[x,y,z],[sx,sy,sz],rz);
+      const sleeve = (x, y, length, radiusTop, radiusBottom, angle) => cyl(radiusTop,radiusBottom,length,32,x,y,0,1,1,0.82,angle);
+      if (selectedGarment === 'pants' || selectedGarment === 'shorts') {
+        const isShort = selectedGarment === 'shorts';
+        const length = isShort ? 0.95 : 1.75;
+        const topY = isShort ? 0.25 : -0.12;
+        cyl(0.78,0.82,0.42,48,0,0.83,0,1,1,0.62,0);
+        [-0.43,0.43].forEach((x) => {
+          const leg = addGarmentMesh(new THREE.CylinderGeometry(0.39,0.34,length,40,24),[x,topY,0],[1,isShort?1:1.08,0.72],0);
+          leg.rotation.z = x < 0 ? -0.025 : 0.025;
+        });
+        if (!isShort) {
+          [-0.43,0.43].forEach((x) => addGarmentMesh(new THREE.TorusGeometry(0.31,0.035,10,40),[x,-1.02,0],[1,1,0.72],0));
+        }
+        mainGarmentMesh = garmentMeshes[0];
+        garmentGroup.position.y = isShort ? -0.15 : 0;
+      } else {
+        const isTee = selectedGarment === 'tshirt';
+        const isHoodie = selectedGarment === 'hoodie';
+        const bodyHeight = isTee ? 1.65 : 1.9;
+        mainGarmentMesh = addGarmentMesh(new THREE.CylinderGeometry(0.69,0.78,bodyHeight,64,32),[0,0,0],[1.18,1,0.7],0);
+        const sleeveLength = isTee ? 0.66 : 0.92;
+        const sleeveRadius = isTee ? 0.29 : 0.32;
+        sleeve(-0.91,0.54,sleeveLength,sleeveRadius,sleeveRadius+0.06,0.88);
+        sleeve(0.91,0.54,sleeveLength,sleeveRadius,sleeveRadius+0.06,-0.88);
+        addGarmentMesh(new THREE.TorusGeometry(0.31,0.055,14,48),[0,bodyHeight/2,0],[1.1,1,0.72],0);
+        if (isHoodie) {
+          addGarmentMesh(new THREE.SphereGeometry(0.43,32,24,0,Math.PI*2,0,Math.PI*0.72),[0,1.02,-0.12],[1,1.05,0.85],0);
+          addGarmentMesh(new THREE.BoxGeometry(0.86,0.43,0.12),[0,-0.25,0.48],[1,1,1],0);
+          addGarmentMesh(new THREE.CylinderGeometry(0.035,0.035,0.58,12),[-0.13,0.45,0.49],[1,1,1],0);
+          addGarmentMesh(new THREE.CylinderGeometry(0.035,0.035,0.58,12),[0.13,0.45,0.49],[1,1,1],0);
+        }
+        if (!isTee) {
+          addGarmentMesh(new THREE.TorusGeometry(0.72,0.045,10,64),[0,-bodyHeight/2,0],[1.08,1,0.72],0);
+        }
+      }
+      scene.add(garmentGroup);
+      const names = { hoodie:'Hoodie', tshirt:'T-shirt', pants:'Baggy pants', sweatshirt:'Sweatshirt', shorts:'Shorts' };
+      document.querySelector('.workspace-heading h2').textContent = names[selectedGarment] + ' design preview';
+      controls.target.set(0, selectedGarment === 'pants' ? 0 : 0.1, 0);
+      camera.position.set(0, selectedGarment === 'pants' ? 0.25 : 0.5, selectedGarment === 'pants' ? 5.2 : 4.5);
+      controls.update();
+    }
+    generateGarment();
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let currentDecalTexture = null;
@@ -311,15 +382,16 @@
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObject(mainGarmentMesh, false);
+      const intersects = raycaster.intersectObjects(garmentMeshes, false);
       if (intersects.length > 0) {
+        const targetMesh = intersects[0].object;
         const point = intersects[0].point;
-        const normal = intersects[0].face.normal.clone().transformDirection(mainGarmentMesh.matrixWorld);
+        const normal = intersects[0].face.normal.clone().transformDirection(targetMesh.matrixWorld);
         const scale = parseFloat(document.getElementById('decalSize').value);
         const dummy = new THREE.Object3D();
         dummy.position.copy(point);
         dummy.lookAt(point.clone().add(normal));
-        const decalGeometry = new THREE.DecalGeometry(mainGarmentMesh, point, dummy.rotation, new THREE.Vector3(scale, scale, scale));
+        const decalGeometry = new THREE.DecalGeometry(targetMesh, point, dummy.rotation, new THREE.Vector3(scale, scale, scale));
         const decalMaterial = new THREE.MeshStandardMaterial({ map: currentDecalTexture, transparent: true, depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.5 });
         const decalMesh = new THREE.Mesh(decalGeometry, decalMaterial);
         decals.push(decalMesh);
