@@ -1,547 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f4ef">
-  <title>Soad Lkhiyata — Digital Atelier</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --ink: #20251f;
-      --muted: #777d73;
-      --line: #e7e6df;
-      --paper: #f5f4ef;
-      --panel: #fffefa;
-      --green: #244b3d;
-      --green-dark: #19392e;
-      --lime: #d6f078;
-      --shadow: 0 18px 50px rgba(34, 42, 34, .08);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { height: 100vh; overflow: hidden; color: var(--ink); background: var(--paper); }
-    .topbar {
-      height: 76px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 34px; background: rgba(255,254,250,.94); border-bottom: 1px solid var(--line);
-      position: relative; z-index: 30;
-    }
-    .brand { display:flex; align-items:center; gap:13px; }
-    .brand-mark {
-      width:40px; height:40px; border-radius:13px; display:grid; place-items:center;
-      color:var(--lime); background:var(--green); font-size:18px; font-weight:800; letter-spacing:-2px;
-    }
-    .brand-name { font-size:15px; font-weight:800; letter-spacing:-.5px; }
-    .brand-sub { margin-top:2px; color:var(--muted); font-size:10px; letter-spacing:1.7px; text-transform:uppercase; }
-    .topbar-right { display:flex; align-items:center; gap:12px; }
-    .studio-status { display:flex; align-items:center; gap:8px; color:#647067; font-size:11px; font-weight:700; letter-spacing:.4px; }
-    .status-dot { width:7px; height:7px; border-radius:50%; background:#6eaa78; box-shadow:0 0 0 4px #e9f2e6; }
-    .top-pill { border:1px solid var(--line); border-radius:30px; padding:9px 14px; color:#566157; font-size:11px; font-weight:700; background:#fff; }
-    .app-shell { height:calc(100vh - 76px); display:grid; grid-template-columns:370px minmax(0,1fr); }
-    .sidebar {
-      width:auto; min-width:0; padding:25px 22px 22px; display:flex; flex-direction:column; gap:19px;
-      background:var(--panel); border-right:1px solid var(--line); overflow-y:auto; z-index:10;
-    }
-    .sidebar-intro { padding:0 3px 2px; }
-    .eyebrow { color:#8a907f; font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
-    .sidebar-intro h1 { margin-top:8px; font-size:22px; line-height:1.2; letter-spacing:-1px; font-weight:800; }
-    .sidebar-intro p { margin-top:7px; color:var(--muted); font-size:11px; line-height:1.6; }
-    .garment-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-    .garment-option { min-height:72px; padding:10px 8px; border:1px solid #e8e9e1; border-radius:10px; background:#fafaf7; color:#596257; cursor:pointer; text-align:left; transition:.18s; }
-    .garment-option:hover { border-color:#9eb3a2; background:#f1f5ed; }
-    .garment-option.active { border:1.5px solid var(--green); background:#edf2e9; color:var(--green); box-shadow:inset 0 0 0 1px rgba(36,75,61,.05); }
-    .garment-icon { display:block; font-size:22px; line-height:1; margin-bottom:7px; }
-    .garment-option strong { display:block; font-size:10px; }
-    .garment-option small { display:block; margin-top:3px; color:#92988e; font-size:8px; }
-    .generate-garment { min-height:46px; margin-top:11px; font-size:11px; }
-    .control-box {
-      padding:16px; border:1px solid var(--line); border-radius:15px; background:#fff;
-      box-shadow:0 4px 14px rgba(38,45,35,.025);
-    }
-    .section-heading { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
-    .step-number {
-      flex:0 0 25px; width:25px; height:25px; display:grid; place-items:center;
-      border-radius:8px; background:#edf1e8; color:var(--green); font-size:10px; font-weight:800;
-    }
-    .section-title { color:var(--ink); font-size:12px; font-weight:800; letter-spacing:-.2px; }
-    .section-hint { margin-left:auto; color:#9a9d93; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; }
-    .label { display:block; margin:11px 0 7px; color:#858b80; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:1.1px; }
-    input[type="text"], input[type="file"] {
-      width:100%; padding:11px 12px; background:#fafaf7; border:1px solid #e8e9e1; border-radius:9px;
-      color:var(--ink); font-size:11px; outline:none; transition:border .2s, box-shadow .2s;
-    }
-    input[type="text"]:focus, input[type="file"]:focus { border-color:#8ba494; box-shadow:0 0 0 3px rgba(36,75,61,.08); }
-    input[type="text"]::placeholder { color:#a7aaa1; }
-    input[type="color"] { width:100%; height:39px; padding:4px; border:1px solid #e8e9e1; border-radius:9px; background:#fafaf7; cursor:pointer; }
-    input[type="range"] { width:100%; accent-color:var(--green); cursor:pointer; }
-    .color-row { display:grid; grid-template-columns:1fr 44px; gap:9px; align-items:center; }
-    .color-note { color:var(--muted); font-size:10px; }
-    .btn {
-      width:100%; min-height:39px; padding:10px 13px; border:0; border-radius:9px; cursor:pointer;
-      display:flex; align-items:center; justify-content:center; gap:8px; font-size:10px; font-weight:800;
-      letter-spacing:.2px; transition:transform .18s, background .18s, box-shadow .18s;
-    }
-    .btn:hover { transform:translateY(-1px); }
-    .btn-primary { color:#fff; background:var(--green); box-shadow:0 5px 12px rgba(36,75,61,.13); }
-    .btn-primary:hover { background:var(--green-dark); }
-    .btn-secondary { color:var(--green); background:#edf1e8; }
-    .btn-secondary:hover { background:#e3eadc; }
-    .btn-export { min-height:47px; color:#1e3025; background:var(--lime); box-shadow:0 7px 16px rgba(146,173,69,.17); }
-    .btn-export:hover { background:#c9e765; }
-    .btn:disabled { opacity:.55; cursor:wait; transform:none; }
-    .chips-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:7px; }
-    .chip {
-      padding:9px 5px; border:1px solid #e8e9e1; border-radius:8px; background:#fafaf7; color:#62695f;
-      font-size:9px; font-weight:700; cursor:pointer; text-align:center; transition:.18s;
-    }
-    .chip:hover { border-color:#a5b9a9; background:#edf2e9; color:var(--green); }
-    .preview-card {
-      display:flex; align-items:center; gap:10px; margin-top:12px; padding:9px;
-      border:1px dashed #dfe3d8; border-radius:10px; background:#fbfcf8;
-    }
-    .preview-card img { width:42px; height:42px; border-radius:7px; object-fit:contain; background:#eef0e9; }
-    .preview-copy { min-width:0; }
-    .preview-title { color:var(--ink); font-size:10px; font-weight:800; }
-    .preview-sub { margin-top:4px; color:var(--muted); font-size:9px; line-height:1.4; }
-    .range-caption { display:flex; justify-content:space-between; color:#92978d; font-size:9px; margin-top:3px; }
-    .upload-wrap { padding:11px; border:1px dashed #d9ded4; border-radius:10px; background:#fafbf8; }
-    .sidebar-actions { margin-top:auto; display:grid; gap:9px; padding-top:2px; }
-    #viewport-container {
-      min-width:0; min-height:0; position:relative; overflow:hidden; cursor:grab;
-      background:radial-gradient(ellipse at 52% 43%, #ffffff 0%, #f0f0e9 48%, #e5e7dd 100%);
-    }
-    #viewport-container:active { cursor:grabbing; }
-    #viewport-container canvas { display:block; width:100%; height:100%; }
-    .workspace-top {
-      position:absolute; top:24px; left:28px; right:28px; z-index:3;
-      display:flex; align-items:flex-start; justify-content:space-between; pointer-events:none;
-    }
-    .workspace-heading { pointer-events:auto; }
-    .workspace-heading .eyebrow { color:#7d887a; }
-    .workspace-heading h2 { margin-top:6px; color:#27332a; font-size:19px; font-weight:800; letter-spacing:-.8px; }
-    .workspace-heading p { margin-top:4px; color:#7c8479; font-size:10px; }
-    .view-chip { padding:9px 13px; border:1px solid rgba(255,255,255,.85); border-radius:30px; background:rgba(255,255,255,.72); color:#566256; font-size:9px; font-weight:800; letter-spacing:.5px; backdrop-filter:blur(12px); }
-    .banner {
-      position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:3;
-      padding:10px 16px; border:1px solid rgba(255,255,255,.85); border-radius:30px;
-      background:rgba(255,255,255,.78); color:#657064; font-size:9px; font-weight:700;
-      white-space:nowrap; pointer-events:none; box-shadow:0 8px 25px rgba(30,40,30,.06); backdrop-filter:blur(12px);
-    }
-    .spinner { width:12px; height:12px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; display:none; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    @media (max-width:900px) {
-      .app-shell { grid-template-columns:330px minmax(0,1fr); }
-      .sidebar { padding:20px 16px; }
-      .topbar { padding:0 20px; }
-    }
-    @media (max-width:700px) {
-      body { height:100dvh; overflow:hidden; }
-      .topbar { height:62px; padding:0 14px; }
-      .brand-mark { width:34px; height:34px; border-radius:11px; }
-      .brand-name { font-size:13px; }
-      .brand-sub { font-size:8px; }
-      .studio-status { display:none; }
-      .top-pill { padding:8px 10px; font-size:9px; }
-      .app-shell { height:calc(100dvh - 62px); display:flex; flex-direction:column-reverse; }
-      #viewport-container { flex:1 1 auto; min-height:230px; }
-      .sidebar { width:100%; max-height:48%; min-height:0; padding:13px 12px 15px; gap:10px; border-right:0; border-top:1px solid var(--line); }
-      .sidebar-intro { display:none; }
-      .control-box { padding:12px; border-radius:12px; }
-      .workspace-top { top:13px; left:14px; right:14px; }
-      .workspace-heading h2 { font-size:15px; }
-      .workspace-heading p { font-size:9px; }
-      .view-chip { padding:7px 10px; font-size:8px; }
-      .banner { bottom:12px; max-width:calc(100% - 22px); padding:8px 11px; font-size:8px; }
-      .sidebar-actions { margin-top:0; grid-template-columns:1fr 1.4fr; }
-      .btn-export { min-height:42px; }
-    }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f2ec"><title>Soad Lkhiyata — Atelier</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#20251f;--muted:#858a80;--line:#e8e6de;--paper:#f4f2ec;--white:#fffefa;--green:#234b3b;--deep:#17372c;--lime:#d7ed92}
+*{box-sizing:border-box}body{margin:0;height:100vh;overflow:hidden;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif}
+.topbar{height:70px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}.brandmark{height:38px;width:38px;border-radius:12px;background:var(--green);color:var(--lime);display:grid;place-items:center;font:800 15px Manrope;letter-spacing:-1px}.brandname{font:800 14px Manrope;letter-spacing:-.5px}.brandsub{font-size:9px;letter-spacing:1.8px;color:#92968b;margin-top:3px;text-transform:uppercase}
+.topright{display:flex;align-items:center;gap:15px}.saved{font-size:10px;color:#778074}.live{border:1px solid var(--line);border-radius:30px;padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:.7px;color:#667064;background:#fff}
+.layout{height:calc(100vh - 70px);display:grid;grid-template-columns:350px minmax(0,1fr)}
+.panel{background:var(--white);border-right:1px solid var(--line);overflow:auto;padding:24px 22px 20px;display:flex;flex-direction:column;gap:17px}
+.intro .overline,.overline{font-size:9px;font-weight:800;letter-spacing:1.9px;text-transform:uppercase;color:#9a9e91}
+.intro h1{font:800 23px/1.15 Manrope;margin:8px 0 6px;letter-spacing:-1.1px}.intro p{font-size:11px;line-height:1.6;color:var(--muted);margin:0}
+.section{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.sectionhead{display:flex;align-items:center;gap:9px;margin-bottom:12px}.num{height:23px;width:23px;border-radius:7px;background:#edf1e8;color:var(--green);display:grid;place-items:center;font-size:9px;font-weight:800}.sectitle{font:800 11px Manrope}.hint{margin-left:auto;font-size:8px;letter-spacing:1px;color:#9ca095;text-transform:uppercase;font-weight:700}
+.garments{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.garment{border:1px solid #e9e9e2;background:#fbfbf8;border-radius:10px;min-height:66px;padding:9px 10px;text-align:left;cursor:pointer;color:#596257;transition:.16s}
+.garment:hover{border-color:#aab9aa;background:#f4f7f1}.garment.active{border:1.5px solid var(--green);background:#eef3e9;color:var(--green);box-shadow:inset 0 0 0 1px rgba(35,75,59,.04)}
+.gicon{font-size:19px;display:block;margin-bottom:5px}.garment b{display:block;font-size:10px}.garment small{display:block;font-size:8px;color:#999f94;margin-top:2px}
+.btn{border:0;border-radius:9px;padding:11px 13px;min-height:39px;font:700 10px 'DM Sans';cursor:pointer;transition:.18s;display:flex;justify-content:center;align-items:center;gap:7px}
+.btn:hover{transform:translateY(-1px)}.primary{background:var(--green);color:white;box-shadow:0 5px 12px #234b3b20}.primary:hover{background:var(--deep)}.secondary{background:#edf1e8;color:var(--green)}.secondary:hover{background:#e4ebde}.export{background:var(--lime);color:#253328;min-height:45px}.wide{width:100%;margin-top:10px}
+.label{display:block;margin:12px 0 7px;font-size:8px;letter-spacing:1.1px;text-transform:uppercase;color:#8e9488;font-weight:800}
+input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:9px;padding:3px;background:#fafaf7;cursor:pointer}
+.colorline{display:grid;grid-template-columns:1fr 45px;align-items:center;gap:10px}.muted{font-size:10px;color:var(--muted)}
+input[type=text],input[type=file]{width:100%;border:1px solid #e8e9e2;border-radius:9px;background:#fafaf7;padding:10px 11px;font:10px 'DM Sans';outline:none;color:var(--ink)}
+input:focus{border-color:#9db1a1;box-shadow:0 0 0 3px #234b3b10}input[type=range]{width:100%;accent-color:var(--green)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{border:1px solid #e7e9e1;background:#fafbf8;border-radius:7px;padding:7px 9px;font-size:9px;font-weight:700;color:#687165;cursor:pointer}.chip.active,.chip:hover{background:#edf2e9;border-color:#a9bba9;color:var(--green)}
+.upload{padding:10px;border:1px dashed #d9ded5;border-radius:9px;background:#fafbf8}
+.preview{display:flex;align-items:center;gap:9px;margin-top:10px;padding:8px;border:1px dashed #e1e4dc;border-radius:9px}.preview img{width:39px;height:39px;object-fit:contain;border-radius:6px;background:#f0f1eb;display:none}.preview b{font-size:9px}.preview small{display:block;color:#92988d;font-size:8px;margin-top:3px}
+.actions{display:grid;grid-template-columns:1fr 1.25fr;gap:8px;margin-top:auto}
+.stage{position:relative;min-width:0;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#fff 0%,#f0efe9 53%,#e5e6de 100%)}
+#viewport{position:absolute;inset:0}#viewport canvas{display:block;width:100%;height:100%}
+.stagehead{position:absolute;z-index:2;top:25px;left:30px;right:30px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.stagehead h2{font:800 20px Manrope;letter-spacing:-.8px;margin:6px 0 4px}.stagehead p{font-size:10px;color:#81877c;margin:0}.viewcontrols{display:flex;gap:5px;pointer-events:auto}
+.viewbtn{border:1px solid #fff;background:#ffffffb8;color:#647064;border-radius:8px;padding:8px 10px;font-size:8px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px)}.viewbtn.active{background:var(--green);color:white;border-color:var(--green)}
+.stagefoot{position:absolute;bottom:19px;left:50%;transform:translateX(-50%);border:1px solid #ffffffd9;background:#ffffffbd;backdrop-filter:blur(10px);border-radius:30px;padding:9px 14px;color:#737c70;font-size:9px;white-space:nowrap;pointer-events:none}
+.toast{position:absolute;z-index:4;top:82px;left:50%;transform:translateX(-50%);background:#203f32;color:white;padding:9px 14px;border-radius:8px;font-size:10px;box-shadow:0 8px 22px #0002;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+@media(max-width:850px){.layout{grid-template-columns:310px minmax(0,1fr)}.panel{padding:18px 14px}.topbar{padding:0 17px}}
+@media(max-width:650px){body{height:100dvh}.topbar{height:60px;padding:0 13px}.layout{height:calc(100dvh - 60px);display:flex;flex-direction:column-reverse}.stage{flex:1;min-height:220px}.panel{max-height:52%;padding:12px;gap:10px;border:0;border-top:1px solid var(--line)}.intro{display:none}.stagehead{top:12px;left:13px;right:13px}.stagehead h2{font-size:15px}.stagehead p{font-size:9px}.viewbtn{padding:7px}.stagefoot{bottom:9px;font-size:8px}.actions{margin-top:0}.saved{display:none}}
+</style>
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">SL.</div>
-      <div><div class="brand-name">SOAD LKHiyata</div><div class="brand-sub">Digital atelier · Casablanca</div></div>
-    </div>
-    <div class="topbar-right">
-      <div class="studio-status"><span class="status-dot"></span> STUDIO READY</div>
-      <div class="top-pill">3D DESIGN WORKSPACE</div>
-    </div>
-  </header>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="sidebar-intro">
-        <div class="eyebrow">Your creative workspace</div>
-        <h1>Make it yours.</h1>
-        <p>Build a look, explore fabrics and bring your clothing ideas to life.</p>
-      </div>
-
-      <section class="control-box">
-        <div class="section-heading"><span class="step-number">01</span><span class="section-title">Choose your garment</span><span class="section-hint">Start here</span></div>
-        <div class="garment-options" role="group" aria-label="Choose garment type">
-          <button type="button" class="garment-option active" data-garment="hoodie" onclick="selectGarment('hoodie',this)"><span class="garment-icon">🧥</span><strong>Hoodie</strong><small>Relaxed fit</small></button>
-          <button type="button" class="garment-option" data-garment="tshirt" onclick="selectGarment('tshirt',this)"><span class="garment-icon">👕</span><strong>T-shirt</strong><small>Classic fit</small></button>
-          <button type="button" class="garment-option" data-garment="pants" onclick="selectGarment('pants',this)"><span class="garment-icon">👖</span><strong>Baggy pants</strong><small>Loose fit</small></button>
-          <button type="button" class="garment-option" data-garment="sweatshirt" onclick="selectGarment('sweatshirt',this)"><span class="garment-icon">🧶</span><strong>Sweatshirt</strong><small>Without hood</small></button>
-          <button type="button" class="garment-option" data-garment="shorts" onclick="selectGarment('shorts',this)"><span class="garment-icon">🩳</span><strong>Shorts</strong><small>Relaxed fit</small></button>
-        </div>
-        <button class="btn btn-primary generate-garment" id="generateGarmentBtn" onclick="generateGarment()">✦ &nbsp; Generate garment</button>
-      </section>
-
-      <section class="control-box">
-        <div class="section-heading"><span class="step-number">02</span><span class="section-title">Garment colour</span><span class="section-hint">Base</span></div>
-        <div class="color-row">
-          <div class="color-note">Choose your starting colour</div>
-          <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)" aria-label="Garment colour">
-        </div>
-      </section>
-
-      <section class="control-box">
-        <div class="section-heading"><span class="step-number">03</span><span class="section-title">Logo & artwork</span><span class="section-hint">Optional</span></div>
-        <input type="text" id="aiDecalPrompt" placeholder="Describe your artwork idea…" aria-label="Artwork description">
-        <button class="btn btn-primary" id="btnGenDecal" style="margin-top:9px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate artwork with AI</button>
-        <span class="label">Explore ready-made artwork</span>
-        <div class="chips-grid">
-          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200')">Abstract</div>
-          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=200')">Vintage</div>
-          <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=200')">Art print</div>
-        </div>
-        <div class="preview-card">
-          <img id="currentDecalImg" alt="Selected artwork" style="display:none;">
-          <div class="preview-copy"><div class="preview-title" id="decalPreviewTitle">No artwork selected</div><div class="preview-sub">You can design without adding a logo</div></div>
-        </div>
-        <span class="label">Artwork size</span>
-        <input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6">
-        <div class="range-caption"><span>Small</span><span>Large</span></div>
-      </section>
-
-      <section class="control-box">
-        <div class="section-heading"><span class="step-number">04</span><span class="section-title">Fabric pattern</span><span class="section-hint">Optional</span></div>
-        <input type="text" id="aiPatternPrompt" placeholder="e.g. subtle Moroccan geometry…" aria-label="Fabric pattern description">
-        <button class="btn btn-secondary" id="btnGenPattern" style="margin-top:9px;" onclick="generateAIPattern()"><span class="spinner" id="patternSpinner"></span> Generate fabric pattern</button>
-        <span class="label">Quick fabric styles</span>
-        <div class="chips-grid">
-          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500')">Gradient</div>
-          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500')">Abstract</div>
-          <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500')">Camo</div>
-        </div>
-      </section>
-
-      <section class="control-box">
-        <div class="section-heading"><span class="step-number">05</span><span class="section-title">Your own artwork</span><span class="section-hint">Upload</span></div>
-        <div class="upload-wrap"><input type="file" accept="image/*" onchange="uploadCustomDecal(event)" aria-label="Upload artwork"></div>
-      </section>
-
-      <div class="sidebar-actions">
-        <button class="btn btn-secondary" onclick="clearDecals()">↺ Reset design</button>
-        <button class="btn btn-export" onclick="exportHQRender()">↓ &nbsp; Export 2K image</button>
-      </div>
-    </aside>
-    <main id="viewport-container">
-      <div class="workspace-top">
-        <div class="workspace-heading"><div class="eyebrow">Live product preview</div><h2>Your design, in 3D.</h2><p>Rotate, zoom and preview your creation</p></div>
-        <div class="view-chip">● &nbsp; LIVE PREVIEW</div>
-      </div>
-      <div class="banner">Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click garment to place artwork</div>
-    </main>
-  </div>
-    <script>
-    const container = document.getElementById('viewport-container');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#090d16');
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0, 0.5, 4.5);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    container.appendChild(renderer.domElement);
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambientLight);
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    keyLight.position.set(4, 5, 4);
-    scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x818cf8, 0.6);
-    fillLight.position.set(-4, 2, -2);
-    scene.add(fillLight);
-    let garmentGroup = new THREE.Group();
-    const garmentMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.82, metalness: 0 });
-    let mainGarmentMesh = null;
-    let selectedGarment = 'hoodie';
-    const garmentMeshes = [];
-    const decals = [];
-    function addGarmentMesh(geometry, position, scale, rotationZ) {
-      const mesh = new THREE.Mesh(geometry, garmentMaterial);
-      if (position) mesh.position.set(position[0], position[1], position[2]);
-      if (scale) mesh.scale.set(scale[0], scale[1], scale[2]);
-      if (rotationZ) mesh.rotation.z = rotationZ;
-      garmentGroup.add(mesh);
-      garmentMeshes.push(mesh);
-      return mesh;
-    }
-    function clearGarment() {
-      decals.forEach((decal) => { scene.remove(decal); decal.geometry.dispose(); if (decal.material) decal.material.dispose(); });
-      decals.length = 0;
-      scene.remove(garmentGroup);
-      garmentGroup.traverse((obj) => { if (obj.geometry) obj.geometry.dispose(); });
-      garmentGroup = new THREE.Group();
-      garmentMeshes.length = 0;
-    }
-    function selectGarment(type, button) {
-      selectedGarment = type;
-      document.querySelectorAll('.garment-option').forEach((item) => item.classList.toggle('active', item.dataset.garment === type));
-      const names = { hoodie:'Hoodie', tshirt:'T-shirt', pants:'Baggy pants', sweatshirt:'Sweatshirt', shorts:'Shorts' };
-      document.querySelector('.workspace-heading h2').textContent = names[type] + ' design preview';
-    }
-    function generateGarment() {
-      clearGarment();
-      const cyl = (top, bottom, height, radial, x, y, z, sx, sy, sz, rz) => addGarmentMesh(new THREE.CylinderGeometry(top,bottom,height,radial,24),[x,y,z],[sx,sy,sz],rz);
-      const sleeve = (x, y, length, radiusTop, radiusBottom, angle) => cyl(radiusTop,radiusBottom,length,32,x,y,0,1,1,0.82,angle);
-      if (selectedGarment === 'pants' || selectedGarment === 'shorts') {
-        const isShort = selectedGarment === 'shorts';
-        const length = isShort ? 0.95 : 1.75;
-        const topY = isShort ? 0.25 : -0.12;
-        cyl(0.78,0.82,0.42,48,0,0.83,0,1,1,0.62,0);
-        [-0.43,0.43].forEach((x) => {
-          const leg = addGarmentMesh(new THREE.CylinderGeometry(0.39,0.34,length,40,24),[x,topY,0],[1,isShort?1:1.08,0.72],0);
-          leg.rotation.z = x < 0 ? -0.025 : 0.025;
-        });
-        if (!isShort) {
-          [-0.43,0.43].forEach((x) => addGarmentMesh(new THREE.TorusGeometry(0.31,0.035,10,40),[x,-1.02,0],[1,1,0.72],0));
-        }
-        mainGarmentMesh = garmentMeshes[0];
-        garmentGroup.position.y = isShort ? -0.15 : 0;
-      } else {
-        const isTee = selectedGarment === 'tshirt';
-        const isHoodie = selectedGarment === 'hoodie';
-        const bodyHeight = isTee ? 1.65 : 1.9;
-        mainGarmentMesh = addGarmentMesh(new THREE.CylinderGeometry(0.69,0.78,bodyHeight,64,32),[0,0,0],[1.18,1,0.7],0);
-        const sleeveLength = isTee ? 0.66 : 0.92;
-        const sleeveRadius = isTee ? 0.29 : 0.32;
-        sleeve(-0.91,0.54,sleeveLength,sleeveRadius,sleeveRadius+0.06,0.88);
-        sleeve(0.91,0.54,sleeveLength,sleeveRadius,sleeveRadius+0.06,-0.88);
-        addGarmentMesh(new THREE.TorusGeometry(0.31,0.055,14,48),[0,bodyHeight/2,0],[1.1,1,0.72],0);
-        if (isHoodie) {
-          addGarmentMesh(new THREE.SphereGeometry(0.43,32,24,0,Math.PI*2,0,Math.PI*0.72),[0,1.02,-0.12],[1,1.05,0.85],0);
-          addGarmentMesh(new THREE.BoxGeometry(0.86,0.43,0.12),[0,-0.25,0.48],[1,1,1],0);
-          addGarmentMesh(new THREE.CylinderGeometry(0.035,0.035,0.58,12),[-0.13,0.45,0.49],[1,1,1],0);
-          addGarmentMesh(new THREE.CylinderGeometry(0.035,0.035,0.58,12),[0.13,0.45,0.49],[1,1,1],0);
-        }
-        if (!isTee) {
-          addGarmentMesh(new THREE.TorusGeometry(0.72,0.045,10,64),[0,-bodyHeight/2,0],[1.08,1,0.72],0);
-        }
-      }
-      scene.add(garmentGroup);
-      const names = { hoodie:'Hoodie', tshirt:'T-shirt', pants:'Baggy pants', sweatshirt:'Sweatshirt', shorts:'Shorts' };
-      document.querySelector('.workspace-heading h2').textContent = names[selectedGarment] + ' design preview';
-      controls.target.set(0, selectedGarment === 'pants' ? 0 : 0.1, 0);
-      camera.position.set(0, selectedGarment === 'pants' ? 0.25 : 0.5, selectedGarment === 'pants' ? 5.2 : 4.5);
-      controls.update();
-    }
-    generateGarment();
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    let currentDecalTexture = null;
-    let currentPatternTexture = null;
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.setCrossOrigin('anonymous');
-    function setTextureFromUrl(url) {
-      textureLoader.load(url, (texture) => {
-        if (currentDecalTexture && currentDecalTexture !== texture) currentDecalTexture.dispose();
-        currentDecalTexture = texture;
-        document.getElementById('currentDecalImg').src = url;
-        document.getElementById('currentDecalImg').style.display = 'block';
-        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
-      }, undefined, () => alert('Could not load this image. Try another preset or upload a file.'));
-    }
-
-    function setPresetDecal(url) { setTextureFromUrl(url); }
-    function setPresetPattern(url) {
-      textureLoader.load(url, (texture) => {
-        if (currentPatternTexture) currentPatternTexture.dispose();
-        currentPatternTexture = texture;
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(3, 3);
-        garmentMaterial.map = texture;
-        garmentMaterial.color.set('#ffffff');
-        garmentMaterial.needsUpdate = true;
-        document.getElementById('garmentColor').value = '#ffffff';
-      }, undefined, () => alert('Could not load this fabric image. Please try another preset.'));
-    }
-    container.addEventListener('pointerdown', (event) => {
-      if (event.button !== 0 || !currentDecalTexture) return;
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(garmentMeshes, false);
-      if (intersects.length > 0) {
-        const targetMesh = intersects[0].object;
-        const point = intersects[0].point;
-        const normal = intersects[0].face.normal.clone().transformDirection(targetMesh.matrixWorld);
-        const scale = parseFloat(document.getElementById('decalSize').value);
-        const dummy = new THREE.Object3D();
-        dummy.position.copy(point);
-        dummy.lookAt(point.clone().add(normal));
-        const decalGeometry = new THREE.DecalGeometry(targetMesh, point, dummy.rotation, new THREE.Vector3(scale, scale, scale));
-        const decalMaterial = new THREE.MeshStandardMaterial({ map: currentDecalTexture, transparent: true, depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.5 });
-        const decalMesh = new THREE.Mesh(decalGeometry, decalMaterial);
-        decals.push(decalMesh);
-        scene.add(decalMesh);
-      }
-    });
-    function buildImageUrl(prompt, suffix) {
-      const seed = Math.floor(Math.random() * 99999);
-      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + ' ' + suffix) + '?width=512&height=512&nologo=true&seed=' + seed + '&model=turbo';
-    }
-    function loadWithTimeout(url, onLoad, onError, timeoutMs = 20000) {
-      let finished = false;
-      const timer = setTimeout(() => {
-        if (finished) return;
-        finished = true;
-        onError(new Error('Request timed out'));
-      }, timeoutMs);
-      textureLoader.load(url, (texture) => {
-        if (finished) { texture.dispose(); return; }
-        finished = true;
-        clearTimeout(timer);
-        onLoad(texture);
-      }, undefined, (error) => {
-        if (finished) return;
-        finished = true;
-        clearTimeout(timer);
-        onError(error || new Error('Image generation failed'));
-      });
-    }
-    function generateAIDecal() {
-      const prompt = document.getElementById('aiDecalPrompt').value.trim();
-      if (!prompt) { alert('Enter a logo description first.'); return; }
-      setLoading('decal', true);
-      const url = buildImageUrl(prompt, 'single emblem sticker logo, isolated centered artwork, clean white background');
-      loadWithTimeout(url, (texture) => {
-        if (currentDecalTexture) currentDecalTexture.dispose();
-        currentDecalTexture = texture;
-        document.getElementById('currentDecalImg').src = url;
-        document.getElementById('currentDecalImg').style.display = 'block';
-        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
-        setLoading('decal', false);
-      }, () => {
-        setLoading('decal', false);
-        alert('AI image generation is taking too long or failed. Try again or use a preset.');
-      });
-    }
-    function generateAIPattern() {
-      const prompt = document.getElementById('aiPatternPrompt').value.trim();
-      if (!prompt) { alert('Enter a fabric pattern description first.'); return; }
-      setLoading('pattern', true);
-      const url = buildImageUrl(prompt, 'seamless repeating textile fabric pattern');
-      loadWithTimeout(url, (texture) => {
-        if (currentPatternTexture) currentPatternTexture.dispose();
-        currentPatternTexture = texture;
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(3, 3);
-        garmentMaterial.map = texture;
-        garmentMaterial.color.set('#ffffff');
-        garmentMaterial.needsUpdate = true;
-        document.getElementById('garmentColor').value = '#ffffff';
-        setLoading('pattern', false);
-      }, () => {
-        setLoading('pattern', false);
-        alert('AI image generation is taking too long or failed. Try again or use an instant fabric.');
-      }, 25000);
-    }
-    function changeGarmentColor(hex) {
-      garmentMaterial.color.set(hex);
-    }
-    function uploadCustomDecal(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
-      const reader = new FileReader();
-      reader.onload = (loadEvent) => {
-        const image = new Image();
-        image.onload = () => {
-          const texture = new THREE.Texture(image);
-          texture.needsUpdate = true;
-          if (currentDecalTexture) currentDecalTexture.dispose();
-          currentDecalTexture = texture;
-          document.getElementById('currentDecalImg').src = loadEvent.target.result;
-        document.getElementById('currentDecalImg').style.display = 'block';
-        document.getElementById('decalPreviewTitle').textContent = 'Active decal';
-          document.getElementById('currentDecalImg').style.display = 'block';
-          document.getElementById('decalPreviewTitle').textContent = 'Active Decal';
-        };
-        image.onerror = () => alert('Could not read this image.');
-        image.src = loadEvent.target.result;
-      };
-      reader.readAsDataURL(file);
-      event.target.value = '';
-    }
-    function clearDecals() {
-      decals.forEach((decal) => {
-        scene.remove(decal);
-        decal.geometry.dispose();
-        if (decal.material) decal.material.dispose();
-      });
-      decals.length = 0;
-      garmentMaterial.map = null;
-      if (currentPatternTexture) { currentPatternTexture.dispose(); currentPatternTexture = null; }
-      garmentMaterial.color.set('#ffffff');
-      document.getElementById('garmentColor').value = '#ffffff';
-      garmentMaterial.needsUpdate = true;
-    }
-    function setLoading(type, value) {
-      document.getElementById(type === 'decal' ? 'btnGenDecal' : 'btnGenPattern').disabled = value;
-      document.getElementById(type === 'decal' ? 'decalSpinner' : 'patternSpinner').style.display = value ? 'inline-block' : 'none';
-    }
-    function exportHQRender() {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      const oldPixelRatio = renderer.getPixelRatio();
-      const oldAspect = camera.aspect;
-      try {
-        renderer.setPixelRatio(1);
-        renderer.setSize(2048, 2048, false);
-        camera.aspect = 1;
-        camera.updateProjectionMatrix();
-        renderer.render(scene, camera);
-        const link = document.createElement('a');
-        link.download = 'soad-lkhiyata-design-2k.png';
-        link.href = renderer.domElement.toDataURL('image/png');
-        link.click();
-      } catch (error) {
-        alert('Could not export the image. Your browser or graphics card may have reached its memory limit.');
-      } finally {
-        camera.aspect = oldAspect;
-        camera.updateProjectionMatrix();
-        renderer.setPixelRatio(oldPixelRatio);
-        renderer.setSize(width, height, false);
-      }
-    }
-    function resizeRenderer() {
-      const width = Math.max(container.clientWidth, 1);
-      const height = Math.max(container.clientHeight, 1);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    }
-    window.addEventListener('resize', resizeRenderer);
-    if ('ResizeObserver' in window) new ResizeObserver(resizeRenderer).observe(container);
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    resizeRenderer();
-    animate();
-  </script>
-</body>
+<header class="topbar"><div class="brand"><div class="brandmark">SL.</div><div><div class="brandname">SOAD LKHiyata</div><div class="brandsub">Digital clothing atelier · Casablanca</div></div></div><div class="topright"><span class="saved" id="status">Your studio is ready</span><span class="live">3D ATELIER</span></div></header>
+<div class="layout">
+<aside class="panel">
+ <div class="intro"><div class="overline">The clothing configurator</div><h1>Design your next piece.</h1><p>Choose a garment, make it yours, and inspect every angle in the studio.</p></div>
+ <section class="section"><div class="sectionhead"><span class="num">01</span><span class="sectitle">Choose a garment</span><span class="hint">Select model</span></div>
+  <div class="garments">
+   <button class="garment active" data-type="hoodie" onclick="selectGarment('hoodie')"><span class="gicon">🧥</span><b>Hoodie</b><small>Relaxed / oversized</small></button>
+   <button class="garment" data-type="tshirt" onclick="selectGarment('tshirt')"><span class="gicon">👕</span><b>T-shirt</b><small>Classic / boxy</small></button>
+   <button class="garment" data-type="pants" onclick="selectGarment('pants')"><span class="gicon">👖</span><b>Baggy pants</b><small>Wide-leg fit</small></button>
+   <button class="garment" data-type="sweatshirt" onclick="selectGarment('sweatshirt')"><span class="gicon">🧶</span><b>Sweatshirt</b><small>Relaxed crewneck</small></button>
+   <button class="garment" data-type="shorts" onclick="selectGarment('shorts')"><span class="gicon">🩳</span><b>Shorts</b><small>Loose fit</small></button>
+  </div><button class="btn primary wide" onclick="generateGarment()">↻ &nbsp; Load selected garment</button>
+ </section>
+ <section class="section"><div class="sectionhead"><span class="num">02</span><span class="sectitle">Colour & fabric</span><span class="hint">Materials</span></div>
+  <div class="colorline"><span class="muted">Garment colour</span><input id="garmentColor" type="color" value="#d9d6cf" aria-label="Garment colour" onchange="changeGarmentColor(this.value)"></div>
+  <label class="label">Fabric texture</label><div class="chips"><button class="chip active" onclick="setFabric('cotton',this)">Cotton fleece</button><button class="chip" onclick="setFabric('jersey',this)">Jersey</button><button class="chip" onclick="setFabric('terry',this)">French terry</button><button class="chip" onclick="setFabric('denim',this)">Denim</button></div>
+  <label class="label">Pattern</label><div class="chips"><button class="chip active" onclick="setPattern('plain',this)">Plain</button><button class="chip" onclick="setPattern('heather',this)">Heather</button><button class="chip" onclick="setPattern('stripe',this)">Stripe</button><button class="chip" onclick="setPattern('grid',this)">Grid</button><button class="chip" onclick="setPattern('camo',this)">Camo</button></div>
+ </section>
+ <section class="section"><div class="sectionhead"><span class="num">03</span><span class="sectitle">Artwork & branding</span><span class="hint">Optional</span></div>
+  <input type="text" id="artPrompt" placeholder="Describe a graphic, e.g. vintage sun emblem">
+  <button class="btn secondary wide" onclick="generateArtwork()">✦ &nbsp; Create artwork</button>
+  <div class="chips"><button class="chip" onclick="presetArtwork('monogram')">Monogram</button><button class="chip" onclick="presetArtwork('sun')">Sun emblem</button><button class="chip" onclick="presetArtwork('heritage')">Heritage</button></div>
+  <div class="preview"><img id="artPreview" alt="Artwork preview"><div><b id="artName">No artwork selected</b><small>Click the garment to place your graphic</small></div></div>
+  <label class="label">Graphic size</label><input id="artSize" type="range" min=".18" max=".9" step=".04" value=".42">
+  <label class="label">Or upload your own image</label><div class="upload"><input id="artUpload" type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadArtwork(event)"></div>
+ </section>
+ <div class="actions"><button class="btn secondary" onclick="resetDesign()">↺ Reset</button><button class="btn export" onclick="exportRender()">↓ Export 2K</button></div>
+</aside>
+<main class="stage"><div id="viewport"></div><div class="stagehead"><div><div class="overline">Live product preview</div><h2 id="stageTitle">Oversized hoodie</h2><p>Studio sample · Rotate to inspect the garment</p></div><div class="viewcontrols"><button class="viewbtn active" data-view="front" onclick="setView('front',this)">FRONT</button><button class="viewbtn" data-view="back" onclick="setView('back',this)">BACK</button><button class="viewbtn" data-view="side" onclick="setView('side',this)">SIDE</button></div></div><div class="toast" id="toast"></div><div class="stagefoot">Drag to rotate · Scroll to zoom · Click fabric to place artwork</div></main>
+</div>
+<script>
+(() => {
+'use strict';
+const host=document.getElementById('viewport');
+const scene=new THREE.Scene();scene.background=new THREE.Color('#e9e9e1');
+const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(0,.15,6.8);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;host.appendChild(renderer.domElement);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=3.8;controls.maxDistance=10;controls.target.set(0,.05,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0xc5c7bd,2.0));
+const key=new THREE.DirectionalLight(0xffffff,2.2);key.position.set(3,5,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
+const fill=new THREE.DirectionalLight(0xe5eadf,1.15);fill.position.set(-4,2,2);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xffffff,1.8);rim.position.set(0,3,-4);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(5,80),new THREE.MeshStandardMaterial({color:'#e9e9e1',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.95;floor.receiveShadow=true;scene.add(floor);
+const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.35,64),new THREE.MeshBasicMaterial({color:'#77786f',transparent:true,opacity:.12,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.scale.set(1.35,.7,1);shadow.position.y=-1.94;scene.add(shadow);
+let garmentRoot=new THREE.Group(),garmentMeshes=[],detailMeshes=[],decals=[],selected='hoodie',baseColor='#d9d6cf',fabric='cotton',pattern='plain',artTexture=null;
+const material=new THREE.MeshStandardMaterial({color:baseColor,roughness:.91,metalness:0,side:THREE.DoubleSide});
+const seamMat=new THREE.MeshStandardMaterial({color:'#77766f',roughness:1});
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2100)}
+function addMesh(geo,mat=material,parent=garmentRoot){const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);if(mat===material)garmentMeshes.push(m);else detailMeshes.push(m);return m}
+function ringSurface(profile,segments=64,variation=.006){
+ const verts=[],uv=[],indices=[];
+ profile.forEach((p,j)=>{for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2;const wave=variation*(Math.sin(a*7+j*1.7)+.45*Math.sin(a*13-j*2.2));const rx=p[1]*(1+wave),rz=p[2]*(1+wave*.8);verts.push(Math.cos(a)*rx,p[0],Math.sin(a)*rz);uv.push(i/segments,j/(profile.length-1));}});
+ for(let j=0;j<profile.length-1;j++)for(let i=0;i<segments;i++){const a=j*(segments+1)+i,b=a+segments+1;indices.push(a,b,a+1,b,b+1,a+1);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;
+}
+function taperedTube(points,radii,segments=40,sides=20){
+ const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const frames=curve.computeFrenetFrames(segments,false);const verts=[],uv=[],idx=[];
+ for(let i=0;i<=segments;i++){const t=i/segments,pt=curve.getPointAt(t),ri=t*(radii.length-1),lo=Math.floor(ri),f=ri-lo,r=THREE.MathUtils.lerp(radii[lo],radii[Math.min(lo+1,radii.length-1)],f);
+ for(let j=0;j<=sides;j++){const a=j/sides*Math.PI*2,n=frames.normals[i],b=frames.binormals[i];const v=pt.clone().addScaledVector(n,Math.cos(a)*r).addScaledVector(b,Math.sin(a)*r);verts.push(v.x,v.y,v.z);uv.push(j/sides,t);}}
+ for(let i=0;i<segments;i++)for(let j=0;j<sides;j++){const a=i*(sides+1)+j,b=a+sides+1;idx.push(a,b,a+1,b,b+1,a+1);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+function seam(points,r=.012){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));return addMesh(new THREE.TubeGeometry(curve,48,r,8,false),seamMat)}
+function cuff(x,y,z,rx,rz,thick=.055){const g=new THREE.TorusGeometry(1,thick,10,56);const m=addMesh(g);m.position.set(x,y,z);m.scale.set(rx,1,rz);m.rotation.x=Math.PI/2;return m}
+function makeTorso(kind){
+ const tee=kind==='tshirt',hood=kind==='hoodie',sweat=kind==='sweatshirt';
+ const profile=tee?[ [ -.88,.62,.34],[-.78,.72,.39],[-.35,.77,.42],[.25,.76,.41],[.62,.69,.37],[.83,.48,.29],[.88,.37,.25] ]:
+ [[-.98,.68,.37],[-.9,.77,.42],[-.45,.82,.46],[.18,.8,.45],[.58,.74,.42],[.83,.57,.34],[.92,.4,.27]];
+ const body=addMesh(ringSurface(profile,72,.004));body.userData.isBody=true;
+ const sleeveLen=tee?.62:.9,rad=tee?.235:.29;
+ addMesh(taperedTube([[-.66,.61,0],[-.91,.53,.015],[-1.1,.28,.02],[-1.19,.12,.025]],[rad*.92,rad*.86,rad*.72,rad*.68]));
+ addMesh(taperedTube([[.66,.61,0],[.91,.53,.015],[1.1,.28,.02],[1.19,.12,.025]],[rad*.92,rad*.86,rad*.72,rad*.68]));
+ cuff(-1.19,.12,.025,rad*.68,rad*.68,.045);cuff(1.19,.12,.025,rad*.68,rad*.68,.045);
+ cuff(0,-.91,0,.71,.4,.045);
+ // Shoulder and side construction seams
+ seam([[-.69,.68,.29],[-.47,.82,.35],[0,.85,.36],[.47,.82,.35],[.69,.68,.29]],.009);
+ seam([[-.69,.6,.28],[-.72,.15,.34],[-.68,-.65,.31]],.008);seam([[.69,.6,.28],[.72,.15,.34],[.68,-.65,.31]],.008);
+ if(hood){
+  // Structured hood shell and opening rim
+  const hoodGeo=new THREE.SphereGeometry(.43,40,28,0,Math.PI*2,0,Math.PI*.82);const hm=addMesh(hoodGeo);hm.position.set(0,.91,-.13);hm.scale.set(1.02,1.08,.92);
+  seam([[-.31,1.04,.15],[-.24,1.25,.12],[0,1.31,.1],[.24,1.25,.12],[.31,1.04,.15]],.014);
+  // Kangaroo pocket: softly rounded patch plus stitch outline
+  const shape=new THREE.Shape();shape.moveTo(-.39,-.05);shape.quadraticCurveTo(-.39,-.17,-.27,-.18);shape.lineTo(.27,-.18);shape.quadraticCurveTo(.39,-.17,.39,-.05);shape.lineTo(.31,.17);shape.lineTo(-.31,.17);shape.closePath();
+  const pocket=addMesh(new THREE.ShapeGeometry(shape,20));pocket.position.set(0,-.35,.405);pocket.material=material;
+  seam([[-.39,-.4,.414],[-.34,-.52,.414],[0,-.54,.414],[.34,-.52,.414],[.39,-.4,.414]],.009);
+  // Drawstrings
+  [-.1,.1].forEach(x=>{seam([[x,.83,.31],[x,.59,.37],[x+(x<0?-.025:.025),.48,.38]],.012)});
+ }else{
+  // Ribbed neckline ring
+  const collar=addMesh(new THREE.TorusGeometry(.28,.055,14,64));collar.position.set(0,.83,0);collar.scale.set(1.35,1,.78);collar.rotation.x=Math.PI/2;
+ }
+ if(!tee){cuff(0,-.91,0,.69,.4,.07);}
+}
+function makePants(shorts=false){
+ const top=addMesh(ringSurface([[.78,.68,.34],[.9,.72,.36],[.94,.67,.34]],64,.002));top.position.y=0;
+ const len=shorts?1.02:1.76, y0=.64, y1=y0-len;
+ [-.39,.39].forEach((x,idx)=>{
+  const outward=idx===0?-.035:.035;
+  const geo=taperedTube([[x*.85,y0,0],[x+outward,.15,0],[x+outward*.8,y1+.12,0]],[.37,.39,.32,.30],52,32);
+  const leg=addMesh(geo);leg.position.y=0;
+  if(!shorts){cuff(x+outward,y1+.12,0,.305,.29,.045);seam([[x-.2,.48,.29],[x-.22,-.25,.31],[x-.18,y1+.15,.26]],.008);seam([[x+.2,.48,.29],[x+.22,-.25,.31],[x+.18,y1+.15,.26]],.008);}
+ });
+ cuff(0,.84,0,.69,.35,.07);
+ seam([[-.63,.75,.18],[0,.75,.35],[.63,.75,.18]],.01);
+}
+function clearModel(){scene.remove(garmentRoot);garmentRoot.traverse(o=>{if(o.geometry)o.geometry.dispose()});garmentRoot=new THREE.Group();garmentMeshes=[];detailMeshes=[];decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.dispose()});decals=[];material.map=null;material.needsUpdate=true;}
+const names={hoodie:'Oversized hoodie',tshirt:'Boxy T-shirt',pants:'Baggy pants',sweatshirt:'Relaxed sweatshirt',shorts:'Relaxed shorts'};
+function generateGarment(){
+ clearModel();
+ if(selected==='pants'||selected==='shorts')makePants(selected==='shorts');else makeTorso(selected);
+ scene.add(garmentRoot);garmentRoot.position.y=selected==='pants'?-0.05:0;
+ document.getElementById('stageTitle').textContent=names[selected];
+ controls.target.set(0,selected==='pants'?.0:.05,0);camera.position.set(0,.12,selected==='pants'?6.7:6.1);controls.update();
+ if(artTexture)toast('Garment loaded · click the front to place artwork');
+}
+function selectGarment(type){selected=type;document.querySelectorAll('.garment').forEach(b=>b.classList.toggle('active',b.dataset.type===type));generateGarment();}
+function changeGarmentColor(hex){baseColor=hex;material.color.set(hex);}
+function makeFabricMap(type,pat){
+ const c=document.createElement('canvas');c.width=512;c.height=512;const x=c.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,512,512);
+ if(pat==='heather'){for(let i=0;i<9000;i++){x.fillStyle=i%2?'rgba(80,80,80,.045)':'rgba(255,255,255,.12)';x.fillRect(Math.random()*512,Math.random()*512,1.5,1.5);}}
+ if(pat==='stripe'){x.strokeStyle='rgba(60,65,58,.12)';x.lineWidth=5;for(let y=0;y<512;y+=34){x.beginPath();x.moveTo(0,y);x.lineTo(512,y);x.stroke();}}
+ if(pat==='grid'){x.strokeStyle='rgba(65,70,60,.12)';x.lineWidth=2;for(let i=0;i<=512;i+=42){x.beginPath();x.moveTo(i,0);x.lineTo(i,512);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(512,i);x.stroke();}}
+ if(pat==='camo'){const colors=['#7b806b','#a2a28a','#555e4d','#c1b89b'];for(let i=0;i<90;i++){x.fillStyle=colors[i%4];x.beginPath();x.ellipse(Math.random()*512,Math.random()*512,18+Math.random()*36,10+Math.random()*27,Math.random()*3,0,Math.PI*2);x.fill();}}
+ if(type==='denim'){x.strokeStyle='rgba(50,60,80,.13)';x.lineWidth=1;for(let i=-512;i<1024;i+=7){x.beginPath();x.moveTo(i,0);x.lineTo(i+512,512);x.stroke();}}
+ const tex=new THREE.CanvasTexture(c);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(type==='denim'?2:3,3);tex.encoding=THREE.sRGBEncoding;return tex;
+}
+function setFabric(type,button){fabric=type;document.querySelectorAll('.section:nth-of-type(2) .chips:first-of-type .chip').forEach(b=>b.classList.remove('active'));if(button)button.classList.add('active');material.roughness=type==='denim'?.78:type==='jersey'?.88:.96;material.map=makeFabricMap(type,pattern);material.needsUpdate=true;}
+function setPattern(type,button){pattern=type;document.querySelectorAll('.section:nth-of-type(2) .chips:last-of-type .chip').forEach(b=>b.classList.remove('active'));if(button)button.classList.add('active');material.map=makeFabricMap(fabric,type);material.needsUpdate=true;}
+function artworkCanvas(description){
+ const c=document.createElement('canvas');c.width=512;c.height=512;const x=c.getContext('2d');x.clearRect(0,0,512,512);
+ const prompt=(description||'SOAD').toUpperCase();const palettes=[['#e7d9bd','#233b31','#bd805e'],['#d8e2d0','#283e34','#c28a58'],['#eadfca','#252a28','#a65d45']];const p=palettes[Math.abs(prompt.length)%palettes.length];
+ x.fillStyle=p[0];x.beginPath();x.arc(256,256,190,0,Math.PI*2);x.fill();
+ x.strokeStyle=p[1];x.lineWidth=8;x.beginPath();x.arc(256,256,166,0,Math.PI*2);x.stroke();
+ x.strokeStyle=p[2];x.lineWidth=5;for(let i=0;i<12;i++){const a=i*Math.PI/6;x.beginPath();x.moveTo(256+Math.cos(a)*112,256+Math.sin(a)*112);x.lineTo(256+Math.cos(a)*150,256+Math.sin(a)*150);x.stroke();}
+ x.fillStyle=p[1];x.textAlign='center';x.font='800 48px Manrope, sans-serif';const words=prompt.slice(0,16);x.fillText(words,256,273,300);
+ x.font='700 15px sans-serif';x.letterSpacing='5px';x.fillText('SOAD LKHiyata',256,318);
+ const tex=new THREE.CanvasTexture(c);tex.encoding=THREE.sRGBEncoding;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;
+}
+function applyArtwork(desc){if(artTexture)artTexture.dispose();artTexture=artworkCanvas(desc);const c=document.createElement('canvas');c.width=128;c.height=128;c.getContext('2d').drawImage(artTexture.image,0,0,128,128);document.getElementById('artPreview').src=c.toDataURL();document.getElementById('artPreview').style.display='block';document.getElementById('artName').textContent=desc||'Custom artwork';toast('Artwork ready · click the garment to place it');}
+function generateArtwork(){const p=document.getElementById('artPrompt').value.trim();if(!p){toast('Describe your artwork first');document.getElementById('artPrompt').focus();return;}applyArtwork(p);}
+function presetArtwork(p){document.getElementById('artPrompt').value=p==='monogram'?'SL monogram':p==='sun'?'Vintage sun emblem':'Heritage club crest';applyArtwork(document.getElementById('artPrompt').value);}
+function uploadArtwork(e){const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>8*1024*1024){toast('Please use an image smaller than 8 MB');e.target.value='';return;}const url=URL.createObjectURL(f);new THREE.TextureLoader().load(url,t=>{if(artTexture)artTexture.dispose();artTexture=t;t.encoding=THREE.sRGBEncoding;const img=document.getElementById('artPreview');img.src=url;img.style.display='block';document.getElementById('artName').textContent=f.name;toast('Artwork uploaded · click the garment to place it');},undefined,()=>toast('Could not load that image'));e.target.value='';}
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+renderer.domElement.addEventListener('click',e=>{if(!artTexture)return;const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-(e.clientY-rect.top)/rect.height*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(garmentMeshes,false);if(!hits.length)return;const hit=hits[0],normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld),orientation=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal));const size=Number(document.getElementById('artSize').value);try{const geometry=new THREE.DecalGeometry(hit.object,hit.point,orientation,new THREE.Vector3(size,size,.035));const decalMat=new THREE.MeshStandardMaterial({map:artTexture,transparent:true,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,roughness:.9});const decal=new THREE.Mesh(geometry,decalMat);decal.renderOrder=5;scene.add(decal);decals.push(decal);toast('Artwork placed');}catch(err){toast('Could not place artwork on this area');}});
+function setView(view,btn){document.querySelectorAll('.viewbtn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');const target=view==='back'?new THREE.Vector3(0,.12,-6.1):view==='side'?new THREE.Vector3(6.1,.12,0):new THREE.Vector3(0,.12,6.1);camera.position.copy(target);controls.target.set(0,.05,0);controls.update();}
+function resetDesign(){baseColor='#d9d6cf';document.getElementById('garmentColor').value=baseColor;material.color.set(baseColor);material.map=makeFabricMap('cotton','plain');material.roughness=.91;material.needsUpdate=true;decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.dispose()});decals=[];if(artTexture){artTexture.dispose();artTexture=null;}document.getElementById('artPreview').style.display='none';document.getElementById('artName').textContent='No artwork selected';document.getElementById('artPrompt').value='';toast('Design reset');}
+function exportRender(){const oldW=renderer.domElement.width,oldH=renderer.domElement.height,oldRatio=renderer.getPixelRatio(),oldAspect=camera.aspect;try{renderer.setPixelRatio(1);renderer.setSize(2048,2048,false);camera.aspect=1;camera.updateProjectionMatrix();renderer.render(scene,camera);const a=document.createElement('a');a.download='soad-lkhiyata-'+selected+'-design-2k.png';a.href=renderer.domElement.toDataURL('image/png');a.click();toast('2K design exported');}catch(e){toast('Export failed · try a smaller browser window');}finally{camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.setPixelRatio(oldRatio);renderer.setSize(host.clientWidth,host.clientHeight,false);}}
+function resize(){const w=Math.max(host.clientWidth,1),h=Math.max(host.clientHeight,1);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+window.addEventListener('resize',resize);if('ResizeObserver'in window)new ResizeObserver(resize).observe(host);
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}
+material.map=makeFabricMap('cotton','plain');generateGarment();resize();animate();
+})();
+</script>
+</body></html>
