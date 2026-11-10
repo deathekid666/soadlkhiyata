@@ -3,444 +3,327 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 3D Apparel Configurator</title>
-  <!-- Three.js + Controls + DecalGeometry -->
+  <title>Soad Lkhiyata - 3D Clothing Studio</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     body { display: flex; height: 100vh; background: #090d16; color: #f1f5f9; overflow: hidden; }
-
-    /* Studio Sidebar */
-    .sidebar {
-      width: 380px;
-      background: #111827;
-      border-right: 1px solid #1f2937;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      z-index: 20;
-      overflow-y: auto;
-    }
+    .sidebar { width: 360px; min-width: 360px; background: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; gap: 14px; z-index: 20; overflow-y: auto; }
     .header h1 { font-size: 1.25rem; font-weight: 700; color: #fff; }
     .header p { font-size: 0.8rem; color: #94a3b8; }
-
-    .control-box {
-      background: #1e293b;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #334155;
-    }
-    .label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #94a3b8;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    input[type="text"], input[type="file"], select {
-      width: 100%;
-      padding: 10px 12px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: #f8fafc;
-      font-size: 0.85rem;
-      outline: none;
-    }
-    input[type="color"] {
-      width: 100%;
-      height: 38px;
-      border-radius: 8px;
-      border: none;
-      background: none;
-      cursor: pointer;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: none;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
+    .control-box { background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
+    .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; display: block; }
+    input[type="text"], input[type="file"] { width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; font-size: 0.85rem; outline: none; }
+    input[type="color"] { width: 100%; height: 36px; border-radius: 6px; border: none; background: none; cursor: pointer; }
+    input[type="range"] { accent-color: #6366f1; }
+    .btn { width: 100%; padding: 9px 12px; border-radius: 6px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
     .btn-primary { background: #4f46e5; color: white; }
     .btn-primary:hover { background: #4338ca; }
-    .btn-secondary { background: #334155; color: #f8fafc; margin-top: 6px; }
+    .btn-secondary { background: #334155; color: #f8fafc; }
     .btn-secondary:hover { background: #475569; }
     .btn-export { background: #10b981; color: white; margin-top: auto; }
     .btn-export:hover { background: #059669; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* Active Decal Preview Card */
-    .preview-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 8px;
-      padding: 8px;
-      background: #0f172a;
-      border-radius: 8px;
-    }
-    .preview-card img { width: 44px; height: 44px; border-radius: 6px; object-fit: contain; background: #1e293b; }
-
-    /* 3D Viewport */
-    #viewport-container { flex: 1; position: relative; cursor: grab; }
+    .chips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+    .chip { padding: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #cbd5e1; font-size: 0.7rem; cursor: pointer; text-align: center; }
+    .chip:hover { background: #4f46e5; color: white; border-color: #4f46e5; }
+    .preview-card { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 6px; background: #0f172a; border-radius: 6px; }
+    .preview-card img { width: 40px; height: 40px; border-radius: 4px; object-fit: contain; background: #1e293b; }
+    #viewport-container { flex: 1; min-width: 0; position: relative; cursor: grab; }
     #viewport-container:active { cursor: grabbing; }
-
-    .banner {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid #334155;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      pointer-events: none;
-      backdrop-filter: blur(8px);
-      color: #cbd5e1;
-    }
-    .spinner {
-      border: 2px solid #334155;
-      border-top: 2px solid #38bdf8;
-      border-radius: 50%;
-      width: 14px;
-      height: 14px;
-      animation: spin 0.8s linear infinite;
-      display: none;
-    }
+    #viewport-container canvas { display: block; width: 100%; height: 100%; }
+    .banner { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; color: #cbd5e1; white-space: nowrap; }
+    .spinner { border: 2px solid #334155; border-top: 2px solid #38bdf8; border-radius: 50%; width: 12px; height: 12px; animation: spin 0.8s linear infinite; display: none; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @media (max-width: 700px) {
+      body { height: 100dvh; flex-direction: column; overflow: hidden; }
+      .sidebar { width: 100%; min-width: 0; max-height: 46dvh; border-right: 0; border-bottom: 1px solid #1f2937; padding: 12px; gap: 10px; }
+      .header h1 { font-size: 1.05rem; }
+      .control-box { padding: 10px; }
+      #viewport-container { flex: 1; min-height: 0; }
+      .banner { top: 8px; font-size: 0.65rem; padding: 5px 9px; }
+      .btn-export { margin-top: 0; }
+    }
   </style>
 </head>
 <body>
-
-  <!-- Controls Panel -->
   <div class="sidebar">
     <div class="header">
-      <h1>AI Fashion Studio</h1>
-      <p>3D Apparel & Generative Textile System</p>
+      <h1>Soad Lkhiyata</h1>
+      <p>3D Apparel & AI Design Studio</p>
     </div>
-
-    <!-- 1. Color Picker -->
     <div class="control-box">
-      <span class="label">1. Garment Fabric Color</span>
+      <span class="label">1. Fabric Color</span>
       <input type="color" id="garmentColor" value="#ffffff" oninput="changeGarmentColor(this.value)">
     </div>
-
-    <!-- 2. AI Decal / Graphic Generator -->
     <div class="control-box">
-      <span class="label">2. AI Stamp / Decal Generator</span>
-      <input type="text" id="aiDecalPrompt" placeholder="e.g. Cyberpunk skull neon vector">
-      <button class="btn btn-primary" id="btnGenDecal" style="margin-top: 8px;" onclick="generateAIDecal()">
-        <span class="spinner" id="decalSpinner"></span> Generate Decal
-      </button>
-
-      <div class="preview-card" id="activeDecalPreview">
-        <img id="currentDecalImg" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" alt="Decal">
-        <div>
-          <div style="font-size: 0.8rem; font-weight: 600;">Active Decal</div>
-          <div style="font-size: 0.7rem; color: #94a3b8;">Click on the shirt to apply</div>
-        </div>
+      <span class="label">2. Stamp Logo / Decal</span>
+      <input type="text" id="aiDecalPrompt" placeholder="e.g. golden dragon logo">
+      <button class="btn btn-primary" id="btnGenDecal" style="margin-top: 6px;" onclick="generateAIDecal()"><span class="spinner" id="decalSpinner"></span> Generate Logo (AI)</button>
+      <span class="label" style="font-size: 0.65rem; margin-top: 8px;">Instant Presets:</span>
+      <div class="chips-grid">
+        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200')">Neon Wave</div>
+        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=200')">Vintage Art</div>
+        <div class="chip" onclick="setPresetDecal('https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=200')">Skull Oil</div>
       </div>
-
-      <div style="margin-top: 8px;">
-        <span class="label" style="font-size: 0.65rem;">Decal Size</span>
-        <input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6" style="width: 100%;">
+      <div class="preview-card">
+        <img id="currentDecalImg" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200" alt="Decal">
+        <div><div style="font-size: 0.75rem; font-weight: 600;">Active Decal</div><div style="font-size: 0.65rem; color: #94a3b8;">Click shirt to apply</div></div>
+      </div>
+      <div style="margin-top: 6px;"><span class="label" style="font-size: 0.65rem;">Scale</span><input type="range" id="decalSize" min="0.2" max="1.5" step="0.1" value="0.6" style="width: 100%;"></div>
+    </div>
+    <div class="control-box">
+      <span class="label">3. All-Over Fabric Pattern</span>
+      <input type="text" id="aiPatternPrompt" placeholder="e.g. moroccan tile pattern">
+      <button class="btn btn-secondary" id="btnGenPattern" style="margin-top: 6px;" onclick="generateAIPattern()"><span class="spinner" id="patternSpinner"></span> Wrap All-Over (AI)</button>
+      <span class="label" style="font-size: 0.65rem; margin-top: 8px;">Instant Fabrics:</span>
+      <div class="chips-grid">
+        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500')">Gradient</div>
+        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500')">Abstract</div>
+        <div class="chip" onclick="setPresetPattern('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500')">Camo</div>
       </div>
     </div>
-
-    <!-- 3. AI All-Over Seamless Pattern -->
-    <div class="control-box">
-      <span class="label">3. AI All-Over Seamless Pattern</span>
-      <input type="text" id="aiPatternPrompt" placeholder="e.g. 90s vintage floral fabric">
-      <button class="btn btn-secondary" id="btnGenPattern" onclick="generateAIPattern()">
-        <span class="spinner" id="patternSpinner"></span> Wrap Entire Garment
-      </button>
-    </div>
-
-    <!-- 4. Upload Decal -->
-    <div class="control-box">
-      <span class="label">4. Upload Your Own Graphic (PNG)</span>
-      <input type="file" accept="image/*" onchange="uploadCustomDecal(event)">
-    </div>
-
-    <button class="btn btn-secondary" onclick="clearDecals()">Clear All Decals</button>
-    <button class="btn btn-export" onclick="exportHQRender()">Download 2K Render</button>
+    <div class="control-box"><span class="label">4. Upload Custom PNG</span><input type="file" accept="image/*" onchange="uploadCustomDecal(event)"></div>
+    <button class="btn btn-secondary" onclick="clearDecals()">Reset / Clear</button>
+    <button class="btn btn-export" onclick="exportHQRender()">Download 2K Image</button>
   </div>
-
-  <!-- 3D Canvas -->
-  <div id="viewport-container">
-    <div class="banner">Click garment to place active decal | Orbit with left-click | Zoom with scroll</div>
-  </div>
-
+  <div id="viewport-container"><div class="banner">Click garment to stamp decal | Drag to rotate | Scroll to zoom</div></div>
   <script>
-    // --- 1. Scene & Render Setup ---
     const container = document.getElementById('viewport-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#090d16');
-
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(0, 0.5, 4.5);
-
     const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
-
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't look completely underneath
-
-    // --- 2. Studio Lighting ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
-
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
     keyLight.position.set(4, 5, 4);
     scene.add(keyLight);
-
     const fillLight = new THREE.DirectionalLight(0x818cf8, 0.6);
     fillLight.position.set(-4, 2, -2);
     scene.add(fillLight);
-
-    const backLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    backLight.position.set(0, 4, -4);
-    scene.add(backLight);
-
-    // --- 3. High-Quality Procedural T-Shirt Mesh ---
     const garmentGroup = new THREE.Group();
-    const garmentMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.65,
-      metalness: 0.05
-    });
-
-    let mainGarmentMesh;
+    const garmentMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0.05 });
+    const torsoGeo = new THREE.CylinderGeometry(0.72, 0.82, 1.9, 64, 32);
+    torsoGeo.scale(1.15, 1, 0.65);
+    const mainGarmentMesh = new THREE.Mesh(torsoGeo, garmentMaterial);
+    garmentGroup.add(mainGarmentMesh);
+    const collarGeo = new THREE.TorusGeometry(0.35, 0.06, 16, 64);
+    collarGeo.rotation.x = Math.PI / 2;
+    collarGeo.scale(1.1, 1, 0.7);
+    const collar = new THREE.Mesh(collarGeo, garmentMaterial);
+    collar.position.set(0, 0.95, 0);
+    garmentGroup.add(collar);
+    const sleeveGeo = new THREE.CylinderGeometry(0.28, 0.35, 0.8, 32);
+    const leftSleeve = new THREE.Mesh(sleeveGeo, garmentMaterial);
+    leftSleeve.position.set(-0.95, 0.55, 0);
+    leftSleeve.rotation.z = Math.PI / 3.4;
+    leftSleeve.scale.set(1, 1, 0.75);
+    garmentGroup.add(leftSleeve);
+    const rightSleeve = leftSleeve.clone();
+    rightSleeve.position.set(0.95, 0.55, 0);
+    rightSleeve.rotation.z = -Math.PI / 3.4;
+    garmentGroup.add(rightSleeve);
+    scene.add(garmentGroup);
     const decals = [];
-
-    function buildRealisticTShirt() {
-      // Sculpted Torso
-      const torsoGeo = new THREE.CylinderGeometry(0.72, 0.82, 1.9, 64, 32);
-      torsoGeo.scale(1.15, 1, 0.65);
-      mainGarmentMesh = new THREE.Mesh(torsoGeo, garmentMaterial);
-      mainGarmentMesh.castShadow = true;
-      mainGarmentMesh.receiveShadow = true;
-      garmentGroup.add(mainGarmentMesh);
-
-      // Collar Ring
-      const collarGeo = new THREE.TorusGeometry(0.35, 0.06, 16, 64);
-      collarGeo.rotation.x = Math.PI / 2;
-      collarGeo.scale(1.1, 1, 0.7);
-      const collar = new THREE.Mesh(collarGeo, garmentMaterial);
-      collar.position.set(0, 0.95, 0);
-      garmentGroup.add(collar);
-
-      // Left & Right Sleeves
-      const sleeveGeo = new THREE.CylinderGeometry(0.28, 0.35, 0.8, 32);
-      const leftSleeve = new THREE.Mesh(sleeveGeo, garmentMaterial);
-      leftSleeve.position.set(-0.95, 0.55, 0);
-      leftSleeve.rotation.z = Math.PI / 3.4;
-      leftSleeve.scale.set(1, 1, 0.75);
-      garmentGroup.add(leftSleeve);
-
-      const rightSleeve = leftSleeve.clone();
-      rightSleeve.position.set(0.95, 0.55, 0);
-      rightSleeve.rotation.z = -Math.PI / 3.4;
-      garmentGroup.add(rightSleeve);
-
-      scene.add(garmentGroup);
-    }
-    buildRealisticTShirt();
-
-    // --- 4. Decal Projection & Raycasting System ---
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let currentDecalTexture = null;
-
-    // Load initial default decal
-    new THREE.TextureLoader().load(document.getElementById('currentDecalImg').src, (tex) => {
-      currentDecalTexture = tex;
-    });
-
-    const intersection = {
-      intersects: false,
-      point: new THREE.Vector3(),
-      normal: new THREE.Vector3()
-    };
-
-    container.addEventListener('pointerdown', (event) => {
-      // Ensure it's a left click and not dragging UI
-      if (event.button !== 0) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObject(mainGarmentMesh, false);
-
-      if (intersects.length > 0 && currentDecalTexture) {
-        const p = intersects[0].point;
-        const n = intersects[0].face.normal.clone();
-        n.transformDirection(mainGarmentMesh.matrixWorld);
-
-        applyDecal(p, n);
-      }
-    });
-
-    function applyDecal(position, normal) {
-      const scale = parseFloat(document.getElementById('decalSize').value);
-      const size = new THREE.Vector3(scale, scale, scale);
-
-      // Orientation calculation from normal
-      const orientation = new THREE.Euler();
-      const dummy = new THREE.Object3D();
-      dummy.position.copy(position);
-      dummy.lookAt(position.clone().add(normal));
-      orientation.copy(dummy.rotation);
-
-      const decalGeo = new THREE.DecalGeometry(mainGarmentMesh, position, orientation, size);
-      const decalMat = new THREE.MeshStandardMaterial({
-        map: currentDecalTexture,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -4,
-        roughness: 0.5
-      });
-
-      const decalMesh = new THREE.Mesh(decalGeo, decalMat);
-      decals.push(decalMesh);
-      scene.add(decalMesh);
-    }
-
-    // --- 5. AI Generation Integrations ---
-    function generateAIDecal() {
-      const prompt = document.getElementById('aiDecalPrompt').value.trim();
-      if (!prompt) return;
-
-      setLoading('decal', true);
-      const cleanPrompt = encodeURIComponent(prompt + ' single graphic emblem sticker, isolated clean white background vector art');
-      const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=512&height=512&nologo=true`;
-
-      new THREE.TextureLoader().load(url, (texture) => {
+    let currentPatternTexture = null;
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.setCrossOrigin('anonymous');
+    function setTextureFromUrl(url) {
+      textureLoader.load(url, (texture) => {
+        if (currentDecalTexture && currentDecalTexture !== texture) currentDecalTexture.dispose();
         currentDecalTexture = texture;
         document.getElementById('currentDecalImg').src = url;
-        setLoading('decal', false);
-      }, undefined, () => {
-        alert('AI generation timed out. Please try again.');
-        setLoading('decal', false);
-      });
+      }, undefined, () => alert('Could not load this image. Try another preset or upload a file.'));
     }
-
-    function generateAIPattern() {
-      const prompt = document.getElementById('aiPatternPrompt').value.trim();
-      if (!prompt) return;
-
-      setLoading('pattern', true);
-      const cleanPrompt = encodeURIComponent(prompt + ' seamless repeatable textile fabric pattern');
-      const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&nologo=true`;
-
-      new THREE.TextureLoader().load(url, (texture) => {
+    setTextureFromUrl(document.getElementById('currentDecalImg').src);
+    function setPresetDecal(url) { setTextureFromUrl(url); }
+    function setPresetPattern(url) {
+      textureLoader.load(url, (texture) => {
+        if (currentPatternTexture) currentPatternTexture.dispose();
+        currentPatternTexture = texture;
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(3, 3);
         garmentMaterial.map = texture;
+        garmentMaterial.color.set('#ffffff');
         garmentMaterial.needsUpdate = true;
-        setLoading('pattern', false);
-      }, undefined, () => {
-        alert('AI generation timed out.');
-        setLoading('pattern', false);
+        document.getElementById('garmentColor').value = '#ffffff';
+      }, undefined, () => alert('Could not load this fabric image. Please try another preset.'));
+    }
+    container.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || !currentDecalTexture) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(mainGarmentMesh, false);
+      if (intersects.length > 0) {
+        const point = intersects[0].point;
+        const normal = intersects[0].face.normal.clone().transformDirection(mainGarmentMesh.matrixWorld);
+        const scale = parseFloat(document.getElementById('decalSize').value);
+        const dummy = new THREE.Object3D();
+        dummy.position.copy(point);
+        dummy.lookAt(point.clone().add(normal));
+        const decalGeometry = new THREE.DecalGeometry(mainGarmentMesh, point, dummy.rotation, new THREE.Vector3(scale, scale, scale));
+        const decalMaterial = new THREE.MeshStandardMaterial({ map: currentDecalTexture, transparent: true, depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.5 });
+        const decalMesh = new THREE.Mesh(decalGeometry, decalMaterial);
+        decals.push(decalMesh);
+        scene.add(decalMesh);
+      }
+    });
+    function buildImageUrl(prompt, suffix) {
+      const seed = Math.floor(Math.random() * 99999);
+      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + ' ' + suffix) + '?width=512&height=512&nologo=true&seed=' + seed + '&model=turbo';
+    }
+    function loadWithTimeout(url, onLoad, onError, timeoutMs = 20000) {
+      let finished = false;
+      const timer = setTimeout(() => {
+        if (finished) return;
+        finished = true;
+        onError(new Error('Request timed out'));
+      }, timeoutMs);
+      textureLoader.load(url, (texture) => {
+        if (finished) { texture.dispose(); return; }
+        finished = true;
+        clearTimeout(timer);
+        onLoad(texture);
+      }, undefined, (error) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        onError(error || new Error('Image generation failed'));
       });
     }
-
-    // --- 6. Helper Functions ---
+    function generateAIDecal() {
+      const prompt = document.getElementById('aiDecalPrompt').value.trim();
+      if (!prompt) { alert('Enter a logo description first.'); return; }
+      setLoading('decal', true);
+      const url = buildImageUrl(prompt, 'single emblem sticker logo, isolated centered artwork, clean white background');
+      loadWithTimeout(url, (texture) => {
+        if (currentDecalTexture) currentDecalTexture.dispose();
+        currentDecalTexture = texture;
+        document.getElementById('currentDecalImg').src = url;
+        setLoading('decal', false);
+      }, () => {
+        setLoading('decal', false);
+        alert('AI image generation is taking too long or failed. Try again or use a preset.');
+      });
+    }
+    function generateAIPattern() {
+      const prompt = document.getElementById('aiPatternPrompt').value.trim();
+      if (!prompt) { alert('Enter a fabric pattern description first.'); return; }
+      setLoading('pattern', true);
+      const url = buildImageUrl(prompt, 'seamless repeating textile fabric pattern');
+      loadWithTimeout(url, (texture) => {
+        if (currentPatternTexture) currentPatternTexture.dispose();
+        currentPatternTexture = texture;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(3, 3);
+        garmentMaterial.map = texture;
+        garmentMaterial.color.set('#ffffff');
+        garmentMaterial.needsUpdate = true;
+        document.getElementById('garmentColor').value = '#ffffff';
+        setLoading('pattern', false);
+      }, () => {
+        setLoading('pattern', false);
+        alert('AI image generation is taking too long or failed. Try again or use an instant fabric.');
+      }, 25000);
+    }
     function changeGarmentColor(hex) {
       garmentMaterial.color.set(hex);
     }
-
-    function uploadCustomDecal(e) {
-      const file = e.target.files[0];
+    function uploadCustomDecal(event) {
+      const file = event.target.files && event.target.files[0];
       if (!file) return;
-
+      if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          currentDecalTexture = new THREE.Texture(img);
-          currentDecalTexture.needsUpdate = true;
-          document.getElementById('currentDecalImg').src = event.target.result;
+      reader.onload = (loadEvent) => {
+        const image = new Image();
+        image.onload = () => {
+          const texture = new THREE.Texture(image);
+          texture.needsUpdate = true;
+          if (currentDecalTexture) currentDecalTexture.dispose();
+          currentDecalTexture = texture;
+          document.getElementById('currentDecalImg').src = loadEvent.target.result;
         };
+        image.onerror = () => alert('Could not read this image.');
+        image.src = loadEvent.target.result;
       };
       reader.readAsDataURL(file);
+      event.target.value = '';
     }
-
     function clearDecals() {
-      decals.forEach(d => scene.remove(d));
+      decals.forEach((decal) => {
+        scene.remove(decal);
+        decal.geometry.dispose();
+        if (decal.material) decal.material.dispose();
+      });
       decals.length = 0;
       garmentMaterial.map = null;
+      if (currentPatternTexture) { currentPatternTexture.dispose(); currentPatternTexture = null; }
+      garmentMaterial.color.set('#ffffff');
+      document.getElementById('garmentColor').value = '#ffffff';
       garmentMaterial.needsUpdate = true;
     }
-
-    function setLoading(type, isLoading) {
-      const btn = document.getElementById(type === 'decal' ? 'btnGenDecal' : 'btnGenPattern');
-      const spinner = document.getElementById(type === 'decal' ? 'decalSpinner' : 'patternSpinner');
-      btn.disabled = isLoading;
-      spinner.style.display = isLoading ? 'inline-block' : 'none';
+    function setLoading(type, value) {
+      document.getElementById(type === 'decal' ? 'btnGenDecal' : 'btnGenPattern').disabled = value;
+      document.getElementById(type === 'decal' ? 'decalSpinner' : 'patternSpinner').style.display = value ? 'inline-block' : 'none';
     }
-
     function exportHQRender() {
-      // Temporarily boost resolution for a crisp 2K render
-      renderer.setSize(2048, 2048);
-      camera.aspect = 1;
-      camera.updateProjectionMatrix();
-      renderer.render(scene, camera);
-
-      const dataURL = renderer.domElement.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = 'apparel-studio-render-2K.png';
-      link.href = dataURL;
-      link.click();
-
-      // Restore viewport
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const oldPixelRatio = renderer.getPixelRatio();
+      const oldAspect = camera.aspect;
+      try {
+        renderer.setPixelRatio(1);
+        renderer.setSize(2048, 2048, false);
+        camera.aspect = 1;
+        camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
+        const link = document.createElement('a');
+        link.download = 'soad-lkhiyata-design-2k.png';
+        link.href = renderer.domElement.toDataURL('image/png');
+        link.click();
+      } catch (error) {
+        alert('Could not export the image. Your browser or graphics card may have reached its memory limit.');
+      } finally {
+        camera.aspect = oldAspect;
+        camera.updateProjectionMatrix();
+        renderer.setPixelRatio(oldPixelRatio);
+        renderer.setSize(width, height, false);
+      }
     }
-
-    // --- 7. Responsive Loop ---
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
+    function resizeRenderer() {
+      const width = Math.max(container.clientWidth, 1);
+      const height = Math.max(container.clientHeight, 1);
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
-
+      renderer.setSize(width, height);
+    }
+    window.addEventListener('resize', resizeRenderer);
+    if ('ResizeObserver' in window) new ResizeObserver(resizeRenderer).observe(container);
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     }
+    resizeRenderer();
     animate();
   </script>
 </body>
