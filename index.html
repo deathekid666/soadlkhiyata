@@ -112,33 +112,53 @@ function taperedTube(points,radii,segments=40,sides=20){
 function seam(points,r=.012){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));return addMesh(new THREE.TubeGeometry(curve,48,r,8,false),seamMat)}
 function cuff(x,y,z,rx,rz,thick=.055){const g=new THREE.TorusGeometry(1,thick,10,56);const m=addMesh(g);m.position.set(x,y,z);m.scale.set(rx,1,rz);m.rotation.x=Math.PI/2;return m}
 function makeTorso(kind){
- const tee=kind==='tshirt',hood=kind==='hoodie',sweat=kind==='sweatshirt';
- const profile=tee?[ [ -.88,.62,.34],[-.78,.72,.39],[-.35,.77,.42],[.25,.76,.41],[.62,.69,.37],[.83,.48,.29],[.88,.37,.25] ]:
- [[-.98,.68,.37],[-.9,.77,.42],[-.45,.82,.46],[.18,.8,.45],[.58,.74,.42],[.83,.57,.34],[.92,.4,.27]];
- const body=addMesh(ringSurface(profile,72,.004));body.userData.isBody=true;
- const sleeveLen=tee?.62:.9,rad=tee?.235:.29;
- addMesh(taperedTube([[-.66,.61,0],[-.91,.53,.015],[-1.1,.28,.02],[-1.19,.12,.025]],[rad*.92,rad*.86,rad*.72,rad*.68]));
- addMesh(taperedTube([[.66,.61,0],[.91,.53,.015],[1.1,.28,.02],[1.19,.12,.025]],[rad*.92,rad*.86,rad*.72,rad*.68]));
- cuff(-1.19,.12,.025,rad*.68,rad*.68,.045);cuff(1.19,.12,.025,rad*.68,rad*.68,.045);
- cuff(0,-.91,0,.71,.4,.045);
- // Shoulder and side construction seams
- seam([[-.69,.68,.29],[-.47,.82,.35],[0,.85,.36],[.47,.82,.35],[.69,.68,.29]],.009);
- seam([[-.69,.6,.28],[-.72,.15,.34],[-.68,-.65,.31]],.008);seam([[.69,.6,.28],[.72,.15,.34],[.68,-.65,.31]],.008);
+ const tee=kind==='tshirt',hood=kind==='hoodie';
+ // A wider, dropped-shoulder block gives the hoodie a deliberately oversized silhouette.
+ const profile=tee
+  ? [[-.91,.64,.35],[-.82,.73,.4],[-.42,.77,.43],[.22,.77,.43],[.58,.71,.4],[.79,.56,.33],[.84,.4,.27]]
+  : [[-.99,.7,.39],[-.91,.8,.45],[-.52,.86,.48],[.12,.85,.48],[.55,.81,.46],[.79,.67,.39],[.91,.43,.3]];
+ const body=addMesh(ringSurface(profile,88,hood?.012:.007));body.userData.isBody=true;
+ // Sleeves angle naturally away from the dropped shoulder and taper toward the wrist.
+ const sleeveR=tee?.235:.305;
+ const left=[[-.68,.61,.005],[-.91,.53,.015],[-1.08,.29,.035],[-1.22,.04,.055],[-1.24,-.12,.06]];
+ const right=left.map(([x,y,z])=>[-x,y,z]);
+ const radii=tee?[.23,.215,.19,.17,.16]:[.30,.285,.255,.22,.205];
+ addMesh(taperedTube(left,radii,56,28));
+ addMesh(taperedTube(right,radii,56,28));
+ cuff(-1.24,-.12,.06,.205,.205,.055);cuff(1.24,-.12,.06,.205,.205,.055);
+ // Deep, softly rounded rib cuffs and waistband.
+ if(!tee)cuff(0,-.91,0,.72,.415,.075);
+ else cuff(0,-.85,0,.65,.37,.035);
+ // Shoulder joins, side seams and subtle double-stitch detail.
+ seam([[-.72,.65,.31],[-.5,.81,.38],[0,.85,.39],[.5,.81,.38],[.72,.65,.31]],.009);
+ seam([[-.72,.58,.31],[-.75,.12,.37],[-.7,-.72,.34]],.008);
+ seam([[.72,.58,.31],[.75,.12,.37],[.7,-.72,.34]],.008);
  if(hood){
-  // Structured hood shell and opening rim
-  const hoodGeo=new THREE.SphereGeometry(.43,40,28,0,Math.PI*2,0,Math.PI*.82);const hm=addMesh(hoodGeo);hm.position.set(0,.91,-.13);hm.scale.set(1.02,1.08,.92);
-  seam([[-.31,1.04,.15],[-.24,1.25,.12],[0,1.31,.1],[.24,1.25,.12],[.31,1.04,.15]],.014);
-  // Kangaroo pocket: softly rounded patch plus stitch outline
-  const shape=new THREE.Shape();shape.moveTo(-.39,-.05);shape.quadraticCurveTo(-.39,-.17,-.27,-.18);shape.lineTo(.27,-.18);shape.quadraticCurveTo(.39,-.17,.39,-.05);shape.lineTo(.31,.17);shape.lineTo(-.31,.17);shape.closePath();
-  const pocket=addMesh(new THREE.ShapeGeometry(shape,20));pocket.position.set(0,-.35,.47);pocket.material=material;
-  seam([[-.39,-.4,.414],[-.34,-.52,.414],[0,-.54,.414],[.34,-.52,.414],[.39,-.4,.414]],.009);
-  // Drawstrings
-  [-.1,.1].forEach(x=>{seam([[x,.83,.31],[x,.59,.37],[x+(x<0?-.025:.025),.48,.38]],.012)});
+  // Larger hood volume with a visible face opening and layered edge.
+  const hoodGeo=new THREE.SphereGeometry(.47,48,32,0,Math.PI*2,0,Math.PI*.78);
+  const hm=addMesh(hoodGeo);hm.position.set(0,.91,-.105);hm.scale.set(1.12,1.12,.98);
+  seam([[-.35,1.02,.19],[-.31,1.2,.2],[-.17,1.31,.18],[0,1.34,.17],[.17,1.31,.18],[.31,1.2,.2],[.35,1.02,.19]],.016);
+  seam([[-.27,.99,.205],[-.2,.88,.28],[0,.84,.31],[.2,.88,.28],[.27,.99,.205]],.009);
+  // Kangaroo pocket with rounded lower corners and a stitched perimeter.
+  const shape=new THREE.Shape();
+  shape.moveTo(-.43,.13);shape.lineTo(.43,.13);shape.lineTo(.39,-.12);
+  shape.quadraticCurveTo(.37,-.2,.27,-.2);shape.lineTo(-.27,-.2);
+  shape.quadraticCurveTo(-.37,-.2,-.39,-.12);shape.closePath();
+  const pocket=addMesh(new THREE.ShapeGeometry(shape,24));pocket.position.set(0,-.35,.492);
+  seam([[-.43,-.22,.496],[-.4,-.49,.496],[-.28,-.56,.496],[0,-.57,.496],[.28,-.56,.496],[.4,-.49,.496],[.43,-.22,.496]],.009);
+  // Hood drawcords hang from the neckline.
+  [-.105,.105].forEach(x=>seam([[x,.84,.32],[x,.63,.405],[x+(x<0?-.025:.025),.48,.415]],.012));
  }else{
-  // Ribbed neckline ring
-  const collar=addMesh(new THREE.TorusGeometry(.28,.055,14,64));collar.position.set(0,.83,0);collar.scale.set(1.35,1,.78);collar.rotation.x=Math.PI/2;
+  const collar=addMesh(new THREE.TorusGeometry(.28,.055,16,72));
+  collar.position.set(0,.82,0);collar.scale.set(1.38,1,.82);collar.rotation.x=Math.PI/2;
  }
- if(!tee){cuff(0,-.91,0,.69,.4,.07);}
+ // Soft fold cues near the lower torso and sleeve bends, kept subtle like topstitching.
+ if(!tee){
+  seam([[-.53,-.68,.34],[-.34,-.73,.39],[-.12,-.69,.405]],.006);
+  seam([[.53,-.68,.34],[.34,-.73,.39],[.12,-.69,.405]],.006);
+  seam([[-1.13,.25,.19],[-1.08,.08,.22],[-1.1,-.02,.22]],.006);
+  seam([[1.13,.25,.19],[1.08,.08,.22],[1.1,-.02,.22]],.006);
+ }
 }
 function makePants(shorts=false){
  const top=addMesh(ringSurface([[.62,.68,.34],[.76,.72,.36],[.9,.67,.34]],64,.002));top.position.y=0;
